@@ -1,0 +1,6 @@
+﻿services:
+  market.api:
+    image: market.api
+    build:
+      context: .
+      dockerfile: src/Market.API/Dockerfile
