@@ -11,7 +11,7 @@ public class Product
     public decimal? Price { get; set; }
     public string? ExchangeMessage { get; set; }
     public bool IsAvailable { get; set; } = true;
-    public required Profile Owner { get; set; }
+    public required User Owner { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime? UpdatedAt { get; set; }
 
