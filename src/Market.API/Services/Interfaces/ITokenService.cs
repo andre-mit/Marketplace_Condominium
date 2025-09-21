@@ -1,4 +1,4 @@
-using Domain.Entities;
+using Market.Domain.Entities;
 
 namespace Market.API.Services.Interfaces;
 

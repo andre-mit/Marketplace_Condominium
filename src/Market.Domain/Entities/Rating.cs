@@ -1,11 +1,12 @@
 using Domain.Enums;
 
-namespace Domain.Entities;
+namespace Market.Domain.Entities;
 
 public class Rating
 {
     public Guid Id { get; set; }
-    public required User Rater { get; set; }
-    public required User Ratee { get; set; }
+    public required string Review { get; set; }
     public RatingScore Score { get; set; }
+    
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

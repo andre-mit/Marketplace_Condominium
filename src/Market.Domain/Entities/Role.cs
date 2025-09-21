@@ -1,9 +1,9 @@
-namespace Domain.Entities;
+namespace Market.Domain.Entities;
 
 public class Role
 {
     public Guid Id { get; set; }
     public required string Name { get; set; }
 
-    public List<User> Users { get; set; }
+    public List<User>? Users { get; set; }
 }

@@ -1,5 +1,5 @@
-using Domain.Entities;
 using Market.API.Services.Interfaces;
+using Market.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Market.API.Controllers;
@@ -20,7 +20,12 @@ public class AuthController(ITokenService tokenService) : ControllerBase
             Birth = default,
             Unit = "101",
             Tower = "A",
-
+            CPF = "123.456.789-00",
+            Roles = new List<Role>
+            {
+                new() { Id = Guid.NewGuid(), Name = "Admin" },
+                new() { Id = Guid.NewGuid(), Name = "User" }
+            }
         };
         var token = tokenService.CreateToken(user);
         return Ok(new { token });

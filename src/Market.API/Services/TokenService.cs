@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Domain.Entities;
 using Market.API.Services.Interfaces;
+using Market.Domain.Entities;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Market.API.Services;
@@ -12,7 +12,7 @@ public class TokenService(IConfiguration configuration) : ITokenService
     public string CreateToken(User user)
     {
         var handler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("Jwt:Key")!);
+        var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("Jwt:PrivateKey")!);
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(key),
             SecurityAlgorithms.HmacSha256Signature);
