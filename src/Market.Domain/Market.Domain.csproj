@@ -11,8 +11,4 @@
       <Compile Remove="Class1.cs" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Repositories\" />
-    </ItemGroup>
-
 </Project>

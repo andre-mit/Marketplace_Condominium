@@ -1,33 +1,38 @@
 using Market.API.Services.Interfaces;
+using Market.Application.ViewModels.AuthViewModels;
 using Market.Domain.Entities;
+using Market.Domain.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Market.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ITokenService tokenService) : ControllerBase
+public class AuthController(ILogger<AuthController> logger, IAuthService authService) : ControllerBase
 {
     [HttpPost("token")]
-    public IActionResult GetToken()
+    public IActionResult GetToken([FromBody] LoginRequestViewModel model)
     {
-        var user = new User
+        try
         {
-            Id = Guid.NewGuid(),
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john.doe@test.com",
-            Birth = default,
-            Unit = "101",
-            Tower = "A",
-            CPF = "123.456.789-00",
-            Roles = new List<Role>
+            var user = authService.Authenticate(model.Email, model.Password);
+            if (user == null)
             {
-                new() { Id = Guid.NewGuid(), Name = "Admin" },
-                new() { Id = Guid.NewGuid(), Name = "User" }
+                logger.LogWarning("Failed login attempt for email: {Email}", model.Email);
+                return Unauthorized("Invalid email or password");
             }
-        };
-        var token = tokenService.CreateToken(user);
-        return Ok(new { token });
+
+            var token = authService.CreateToken(user);
+
+            return Ok(new LoginResponseViewModel
+            {
+                AccessToken = token,
+                User = user
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Market.API.Data.Configurations;
 
-public class UserConfiguration : IEntityTypeConfiguration<User>
+public class UserConfiguration(IConfiguration configuration) : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
@@ -54,5 +54,36 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(p => p.Owner)
             .HasForeignKey(p => p.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasData(
+            new User
+            {
+                Id = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"),
+                FirstName = "Admin",
+                LastName = "User",
+                Email =
+                    configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
+                CPF = "000.000.000-00",
+                PasswordHash =
+                    BCrypt.Net.BCrypt.HashPassword(configuration.GetValue<string>("AdminUser:Password") ?? "admin123"),
+                Birth = new DateOnly(1990, 1, 1),
+                Unit = "0",
+                Tower = "0"
+            });
+        
+        builder.HasMany(u => u.Roles)
+            .WithMany(r => r.Users)
+            .UsingEntity<Dictionary<string, object>>(
+                "UserRole",
+                j => j.HasOne<Role>().WithMany().HasForeignKey("RoleId"),
+                j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
+                j =>
+                {
+                    j.HasKey("UserId", "RoleId");
+                    j.ToTable("UserRoles");
+                    j.HasData(
+                        new { UserId = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"), RoleId = new Guid("C1C64A20-43D6-440E-9090-1AA2A1CA9A55") } // Admin role
+                    );
+                });
     }
 }

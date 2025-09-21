@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Market.API.Data.Migrations
 {
     /// <inheritdoc />
@@ -42,14 +44,14 @@ namespace Market.API.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CPF = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CPF = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Birth = table.Column<DateOnly>(type: "date", nullable: false),
-                    Unit = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    Tower = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false)
+                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Tower = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -85,24 +87,24 @@ namespace Market.API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserRoles",
+                name: "RoleUser",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    RolesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UsersId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserRoles", x => new { x.UserId, x.RoleId });
+                    table.PrimaryKey("PK_RoleUser", x => new { x.RolesId, x.UsersId });
                     table.ForeignKey(
-                        name: "FK_UserRoles_Roles_RoleId",
-                        column: x => x.RoleId,
+                        name: "FK_RoleUser_Roles_RolesId",
+                        column: x => x.RolesId,
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserRoles_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_RoleUser_Users_UsersId",
+                        column: x => x.UsersId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -235,6 +237,15 @@ namespace Market.API.Data.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.InsertData(
+                table: "Roles",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { new Guid("c1c64a20-43d6-440e-9090-1aa2a1ca9a55"), "Admin" },
+                    { new Guid("f8a41a51-bfdb-4dca-ada9-b025fd2ac2b3"), "User" }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ChatMessages_ChatSessionId",
                 table: "ChatMessages",
@@ -282,6 +293,11 @@ namespace Market.API.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_RoleUser_UsersId",
+                table: "RoleUser",
+                column: "UsersId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Sales_BuyerId",
                 table: "Sales",
                 column: "BuyerId");
@@ -305,23 +321,6 @@ namespace Market.API.Data.Migrations
                 name: "IX_Sales_SellerRatingId",
                 table: "Sales",
                 column: "SellerRatingId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserRoles_RoleId",
-                table: "UserRoles",
-                column: "RoleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_CPF",
-                table: "Users",
-                column: "CPF",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Email",
-                table: "Users",
-                column: "Email",
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -334,19 +333,19 @@ namespace Market.API.Data.Migrations
                 name: "Image");
 
             migrationBuilder.DropTable(
-                name: "Sales");
+                name: "RoleUser");
 
             migrationBuilder.DropTable(
-                name: "UserRoles");
+                name: "Sales");
 
             migrationBuilder.DropTable(
                 name: "ChatSessions");
 
             migrationBuilder.DropTable(
-                name: "Ratings");
+                name: "Roles");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "Ratings");
 
             migrationBuilder.DropTable(
                 name: "Products");

@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.20" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.20" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.20">
@@ -42,6 +43,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Market.Application\Market.Application.csproj" />
       <ProjectReference Include="..\Market.Domain\Market.Domain.csproj" />
     </ItemGroup>
 

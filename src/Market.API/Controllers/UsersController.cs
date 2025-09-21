@@ -1,28 +1,75 @@
+using System.Security.Claims;
+using Market.API.Helpers;
+using Market.API.Services.Interfaces;
+using Market.Application.ViewModels.UserViewModels;
+using Market.Domain.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Market.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController : ControllerBase
+[Authorize]
+public class UsersController(ILogger<UsersController> logger, IUserRepository userRepository, IAuthService authService)
+    : ControllerBase
 {
+    [HttpPost]
+    [AllowAnonymous]
+    public IActionResult CreateUser(CreateUserViewModel model)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (userRepository.UserAlreadyExists(model.Email, model.CPF))
+                return Conflict("A user with the given email or CPF already exists.");
+
+            var password = authService.HashPass(model.Password);
+            var user = new Domain.Entities.User
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                CPF = model.CPF,
+                Email = model.Email,
+                PasswordHash = password,
+                Birth = model.Birth,
+                Unit = model.Unit,
+                Tower = model.Tower
+            };
+
+            userRepository.Add(user);
+
+            ListUserViewModel createdUser = user;
+            return CreatedAtAction(nameof(GetById), new { id = user.Id }, createdUser);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating user");
+            return BadRequest("An error occurred while creating the user.");
+        }
+    }
+
     [HttpGet("me")]
     public IActionResult GetMe()
     {
-        // This is just a placeholder implementation.
-        // In a real application, you would retrieve the user information from the database or authentication context.
-        var user = new
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john.doe@test.com",
-            Birth = DateOnly.FromDateTime(DateTime.Now.AddYears(-30)),
-            Unit = "101",
-            Tower = "A",
-            CPF = "123.456.789-00",
-            Roles = new List<string> { "Admin", "User" }
-        };
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var guid))
+            return Unauthorized("Invalid user ID");
+
+        var user = userRepository.GetById(guid);
+        return Ok(user);
+    }
+
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult GetById(Guid id)
+    {
+        var user = userRepository.GetById(id);
+        if (user == null)
+            return NotFound("User not found");
 
         return Ok(user);
     }

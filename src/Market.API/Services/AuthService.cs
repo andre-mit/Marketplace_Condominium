@@ -3,11 +3,13 @@ using System.Security.Claims;
 using System.Text;
 using Market.API.Services.Interfaces;
 using Market.Domain.Entities;
+using Market.Domain.Repositories;
 using Microsoft.IdentityModel.Tokens;
+using static BCrypt.Net.BCrypt;
 
 namespace Market.API.Services;
 
-public class TokenService(IConfiguration configuration) : ITokenService
+public class AuthService(IConfiguration configuration, IUserRepository userRepository) : IAuthService
 {
     public string CreateToken(User user)
     {
@@ -26,6 +28,19 @@ public class TokenService(IConfiguration configuration) : ITokenService
         var token = handler.CreateToken(tokenDescriptor);
         return handler.WriteToken(token);
     }
+    
+    public User? Authenticate(string email, string password)
+    {
+        var user = userRepository.GetByEmail(email);
+        if (user == null || !Verify(password, user.PasswordHash))
+            return null;
+
+        user.PasswordHash = null;
+        
+        return user;
+    }
+    
+    public string HashPass(string password) => HashPassword(password);
     
     private static ClaimsIdentity GenerateClaims(User user)
     {

@@ -40,7 +40,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"));
 });
 
-builder.Services.AddTransient<ITokenService, TokenService>();
+// builder.Services.AddTransient<IAuthService, AuthService>();
+AddServices(builder.Services);
 
 var app = builder.Build();
 
@@ -59,3 +60,27 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static void AddServices(IServiceCollection services)
+{
+    var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+        .Where(a => a.FullName != null && a.FullName.StartsWith("Market"))
+        .ToArray();
+
+    var types = assemblies
+        .SelectMany(a => a.GetTypes())
+        .Where(t => t.IsClass && !t.IsAbstract)
+        .ToArray();
+
+    foreach (var type in types)
+    {
+        var interfaces = type.GetInterfaces()
+            .Where(i => i.Name == $"I{type.Name}")
+            .ToArray();
+
+        foreach (var @interface in interfaces)
+        {
+            services.AddTransient(@interface, type);
+        }
+    }
+}
