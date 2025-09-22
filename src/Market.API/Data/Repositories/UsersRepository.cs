@@ -3,7 +3,7 @@ using Market.Domain.Repositories;
 
 namespace Market.API.Data.Repositories;
 
-public class UserRepository(ApplicationDbContext context) : IUserRepository
+public class UsersRepository(ApplicationDbContext context) : IUsersRepository
 {
     public User? GetById(Guid id) => context.Users.Find(id);
 

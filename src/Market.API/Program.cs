@@ -1,6 +1,7 @@
 using Market.API.Data;
 using Market.API.Services;
 using Market.API.Services.Interfaces;
+using Market.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,13 +38,42 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"))
+        .UseAsyncSeeding(async (context, _, ct) =>
+        {
+            var hasData = await context.Set<User>().AnyAsync(x => true, cancellationToken: ct);
+            if (!hasData)
+            {
+                context.Set<User>().Add(new User
+                {
+                    Id = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"),
+                    FirstName = "Admin",
+                    LastName = "User",
+                    Email =
+                        builder.Configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
+                    CPF = "000.000.000-00",
+                    PasswordHash =
+                        BCrypt.Net.BCrypt.HashPassword(builder.Configuration.GetValue<string>("AdminUser:Password") ??
+                                                       "admin123"),
+                    Birth = new DateOnly(1990, 1, 1),
+                    Unit = "0",
+                    Tower = "0"
+                });
+
+                await context.SaveChangesAsync(ct);
+            }
+        });
 });
 
-// builder.Services.AddTransient<IAuthService, AuthService>();
 AddServices(builder.Services);
 
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+await using (var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>())
+{
+    await dbContext.Database.EnsureCreatedAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

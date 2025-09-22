@@ -2,7 +2,7 @@ using Market.Domain.Entities;
 
 namespace Market.Domain.Repositories;
 
-public interface IUserRepository
+public interface IUsersRepository
 {
     User? GetById(Guid id);
     bool UserAlreadyExists(string email, string cpf);

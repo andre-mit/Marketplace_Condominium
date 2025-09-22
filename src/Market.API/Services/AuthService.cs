@@ -9,7 +9,7 @@ using static BCrypt.Net.BCrypt;
 
 namespace Market.API.Services;
 
-public class AuthService(IConfiguration configuration, IUserRepository userRepository) : IAuthService
+public class AuthService(IConfiguration configuration, IUsersRepository usersRepository) : IAuthService
 {
     public string CreateToken(User user)
     {
@@ -31,7 +31,7 @@ public class AuthService(IConfiguration configuration, IUserRepository userRepos
     
     public User? Authenticate(string email, string password)
     {
-        var user = userRepository.GetByEmail(email);
+        var user = usersRepository.GetByEmail(email);
         if (user == null || !Verify(password, user.PasswordHash))
             return null;
 

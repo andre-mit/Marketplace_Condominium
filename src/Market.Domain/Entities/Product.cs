@@ -18,7 +18,7 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime? UpdatedAt { get; set; }
 
-    public ProductAdvertisementType[] AdvertisementTypes { get; set; }
+    public required ProductAdvertisementType[] AdvertisementTypes { get; set; }
     
     public ICollection<Image>? Images { get; set; } = new List<Image>();
     

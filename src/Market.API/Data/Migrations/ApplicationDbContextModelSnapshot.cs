@@ -48,7 +48,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatMessages");
+                    b.ToTable("ChatMessages", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.ChatSession", b =>
@@ -77,7 +77,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("ChatSessions");
+                    b.ToTable("ChatSessions", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Image", b =>
@@ -97,7 +97,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Image");
+                    b.ToTable("Image", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Product", b =>
@@ -150,7 +150,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Rating", b =>
@@ -172,7 +172,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Ratings");
+                    b.ToTable("Ratings", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Role", b =>
@@ -191,7 +191,7 @@ namespace Market.API.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
 
                     b.HasData(
                         new
@@ -251,7 +251,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("SellerRatingId");
 
-                    b.ToTable("Sales");
+                    b.ToTable("Sales", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.User", b =>
@@ -292,7 +292,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("RoleUser", b =>
@@ -307,7 +307,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("RoleUser");
+                    b.ToTable("RoleUser", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.ChatMessage", b =>

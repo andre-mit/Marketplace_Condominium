@@ -11,7 +11,7 @@ namespace Market.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class UsersController(ILogger<UsersController> logger, IUserRepository userRepository, IAuthService authService)
+public class UsersController(ILogger<UsersController> logger, IUsersRepository usersRepository, IAuthService authService)
     : ControllerBase
 {
     [HttpPost]
@@ -23,7 +23,7 @@ public class UsersController(ILogger<UsersController> logger, IUserRepository us
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (userRepository.UserAlreadyExists(model.Email, model.CPF))
+            if (usersRepository.UserAlreadyExists(model.Email, model.CPF))
                 return Conflict("A user with the given email or CPF already exists.");
 
             var password = authService.HashPass(model.Password);
@@ -39,7 +39,7 @@ public class UsersController(ILogger<UsersController> logger, IUserRepository us
                 Tower = model.Tower
             };
 
-            userRepository.Add(user);
+            usersRepository.Add(user);
 
             ListUserViewModel createdUser = user;
             return CreatedAtAction(nameof(GetById), new { id = user.Id }, createdUser);
@@ -59,7 +59,7 @@ public class UsersController(ILogger<UsersController> logger, IUserRepository us
         if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var guid))
             return Unauthorized("Invalid user ID");
 
-        var user = userRepository.GetById(guid);
+        var user = usersRepository.GetById(guid);
         return Ok(user);
     }
 
@@ -67,7 +67,7 @@ public class UsersController(ILogger<UsersController> logger, IUserRepository us
     [Authorize(Roles = "Admin")]
     public IActionResult GetById(Guid id)
     {
-        var user = userRepository.GetById(id);
+        var user = usersRepository.GetById(id);
         if (user == null)
             return NotFound("User not found");
 
