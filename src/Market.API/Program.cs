@@ -1,4 +1,5 @@
 using Market.API.Data;
+using Market.API.Hubs;
 using Market.API.Services;
 using Market.API.Services.Interfaces;
 using Market.Domain.Entities;
@@ -34,6 +35,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSignalR();
+
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -88,6 +92,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("/chat");
 
 app.Run();
 
