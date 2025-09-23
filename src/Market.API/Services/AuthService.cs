@@ -51,7 +51,7 @@ public class AuthService(IConfiguration configuration, IUsersRepository usersRep
             new Claim(ClaimTypes.Name, user.FirstName),
         });
         
-        user.Roles.ForEach(role =>
+        user.Roles?.ForEach(role =>
         {
             claims.AddClaim(new Claim(ClaimTypes.Role, role.Name));
         });
