@@ -1,8 +1,11 @@
+using FirebaseAdmin;
 using Market.API.Data;
+using Market.API.Data.Repositories;
 using Market.API.Hubs;
 using Market.API.Services;
 using Market.API.Services.Interfaces;
 using Market.Domain.Entities;
+using Market.Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -70,6 +73,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 AddServices(builder.Services);
+AddRepositories(builder.Services);
 
 var app = builder.Build();
 
@@ -99,24 +103,15 @@ app.Run();
 
 static void AddServices(IServiceCollection services)
 {
-    var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-        .Where(a => a.FullName != null && a.FullName.StartsWith("Market"))
-        .ToArray();
+    services.AddSingleton<IPushNotificationService, PushNotificationService>();
+    
+    services.AddTransient<IAuthService, AuthService>();
+}
 
-    var types = assemblies
-        .SelectMany(a => a.GetTypes())
-        .Where(t => t.IsClass && !t.IsAbstract)
-        .ToArray();
-
-    foreach (var type in types)
-    {
-        var interfaces = type.GetInterfaces()
-            .Where(i => i.Name == $"I{type.Name}")
-            .ToArray();
-
-        foreach (var @interface in interfaces)
-        {
-            services.AddTransient(@interface, type);
-        }
-    }
+static void AddRepositories(IServiceCollection services)
+{
+    services.AddScoped<IUsersRepository, UsersRepository>();
+    services.AddScoped<IProductsRepository, ProductRepository>();
+    services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
+    services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 }

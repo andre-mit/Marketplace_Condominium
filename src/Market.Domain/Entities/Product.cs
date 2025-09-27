@@ -15,7 +15,7 @@ public class Product
     public Guid OwnerId { get; set; }
     public required User Owner { get; set; }
     
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
     public required ProductAdvertisementType[] AdvertisementTypes { get; set; }

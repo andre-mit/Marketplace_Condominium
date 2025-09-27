@@ -5,13 +5,13 @@ public class ChatSession
     public Guid Id { get; set; }
     
     public Guid SellerId { get; set; }
-    public required User Seller { get; set; }
+    public User Seller { get; set; }
     
     public Guid CustomerId { get; set; }
-    public required User Customer { get; set; }
+    public User? Customer { get; set; }
     
     public int ProductId { get; set; }
-    public required Product Product { get; set; }
+    public Product? Product { get; set; }
     
     public ICollection<ChatMessage>? Messages { get; set; } = new List<ChatMessage>();
     

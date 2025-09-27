@@ -15,7 +15,7 @@ public class Sale
     public int ProductId { get; set; }
     public required Product Product { get; set; }
     
-    public DateTime SaleDate { get; set; } = DateTime.Now;
+    public DateTime SaleDate { get; set; } = DateTime.UtcNow;
     public bool IsCompleted => SellerConfirmed && BuyerConfirmed;
     public DateTime? CompletedAt { get; set; }
     

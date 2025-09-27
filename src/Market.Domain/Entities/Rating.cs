@@ -8,5 +8,5 @@ public class Rating
     public required string Review { get; set; }
     public RatingScore Score { get; set; }
     
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
