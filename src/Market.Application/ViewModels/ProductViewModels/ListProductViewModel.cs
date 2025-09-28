@@ -1,6 +1,6 @@
 using Domain.Enums;
 
-namespace Market.Application.ViewModels.ProductViewModels;
+namespace Market.SharedApplication.ViewModels.ProductViewModels;
 
 public class ListProductViewModel
 {

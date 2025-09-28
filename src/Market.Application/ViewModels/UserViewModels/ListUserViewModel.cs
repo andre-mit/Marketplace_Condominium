@@ -1,6 +1,6 @@
 using Market.Domain.Entities;
 
-namespace Market.Application.ViewModels.UserViewModels;
+namespace Market.SharedApplication.ViewModels.UserViewModels;
 
 public class ListUserViewModel
 {

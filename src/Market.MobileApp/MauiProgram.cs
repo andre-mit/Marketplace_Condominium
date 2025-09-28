@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Toolkit.Hosting;
+using System.Reflection;
 
 namespace Market.MobileApp
 {
@@ -27,8 +29,16 @@ namespace Market.MobileApp
                     fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
                 });
 
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("Market.MobileApp.appsettings.json");
+            if (stream != null)
+            {
+                var config = new ConfigurationBuilder().AddJsonStream(stream).Build();
+                builder.Configuration.AddConfiguration(config);
+            }
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
     		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
@@ -41,6 +51,15 @@ namespace Market.MobileApp
             builder.Services.AddSingleton<MainPageModel>();
             builder.Services.AddSingleton<ProjectListPageModel>();
             builder.Services.AddSingleton<ManageMetaPageModel>();
+
+            builder.Services.AddSingleton<IAuthService, AuthService>();
+
+            var httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(builder.Configuration.GetValue<string>("ApiUrl")!)
+            };
+
+            builder.Services.AddSingleton(httpClient);
 
             builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
             builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");

@@ -44,7 +44,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Market.Application\Market.Application.csproj" />
+      <ProjectReference Include="..\Market.Application\Market.SharedApplication.csproj" />
       <ProjectReference Include="..\Market.Domain\Market.Domain.csproj" />
     </ItemGroup>
 

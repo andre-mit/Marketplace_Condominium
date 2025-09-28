@@ -2,6 +2,7 @@ using Market.API.Services.Interfaces;
 using Market.Application.ViewModels.AuthViewModels;
 using Market.Domain.Entities;
 using Market.Domain.Repositories;
+using Market.SharedApplication.ViewModels.AuthViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Market.API.Controllers;
@@ -10,8 +11,8 @@ namespace Market.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController(ILogger<AuthController> logger, IAuthService authService) : ControllerBase
 {
-    [HttpPost("token")]
-    public IActionResult GetToken([FromBody] LoginRequestViewModel model)
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginRequestViewModel model)
     {
         try
         {
