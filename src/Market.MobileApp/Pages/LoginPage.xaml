@@ -6,6 +6,7 @@
              xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Market.MobileApp.Pages.LoginPage"
+             x:DataType="pageModels:LoginPageModel"
              x:Name="Login"
              Title="Login">
 
@@ -19,21 +20,31 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <StackLayout VerticalOptions="Center" Padding="16 64">
+    <StackLayout VerticalOptions="Center">
         <StackLayout Spacing="16">
 
             <Label Text="Entrar" VerticalOptions="Center" HorizontalOptions="Center" FontSize="Large" />
-            <Entry Text="" SemanticProperties.Description="Email" Placeholder="Email / CPF" />
-            <Entry Text="" SemanticProperties.Description="Password" Placeholder="Senha" IsPassword="true" />
+            <Entry Text="{Binding Email}" SemanticProperties.Description="Email" Placeholder="Email / CPF" />
+            <!--<Entry Text="{Binding Password}" SemanticProperties.Description="Password" Placeholder="Senha" IsPassword="true" />-->
+            <!--Password entry with button to visible-->
+            <!--<controls:PasswordEntry
+                Placeholder="Senha"
+                Text="{Binding Password}"
+                SemanticProperties.Description="Password"
+                IsPassword="true" />-->
+            <controls:PasswordEntry
+                Placeholder="Senha"
+                Text="{Binding Password}"
+                SemanticProperties.Description="Password" />
 
             <Button Text="Entrar" ImageSource="{StaticResource IconLogin}"
-                Command="{Binding AddTagCommand}" Grid.Column="1"
+                Command="{Binding LoginCommand}" Grid.Column="1"
                 SemanticProperties.Description="Add" />
         </StackLayout>
 
         <Label Text="Novo por aqui? Crie uma conta" Margin="40" HorizontalOptions="Center">
             <Label.GestureRecognizers>
-                <TapGestureRecognizer Command="" />
+                <TapGestureRecognizer Command="{Binding RegisterCommand}" />
             </Label.GestureRecognizers>
         </Label>
     </StackLayout>

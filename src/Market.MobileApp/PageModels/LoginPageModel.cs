@@ -30,7 +30,7 @@ namespace Market.MobileApp.PageModels
         [RelayCommand]
         private async Task Register()
         {
-            App.Current.MainPage = new RegisterPage();
+            await Shell.Current.GoToAsync($"//{nameof(RegisterPage)}");
         }
     }
 }

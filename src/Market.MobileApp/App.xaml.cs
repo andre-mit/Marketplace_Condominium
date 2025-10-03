@@ -13,7 +13,7 @@
         {
             var isAuthenticated = _authService.IsUserAuthenticatedAsync().Result;
 
-            Page page = isAuthenticated ? new AppShell() : new LoginPage();
+            Page page = isAuthenticated ? new AppShell() : new LoginPage(new LoginPageModel());
 
             return new Window(page);
         }

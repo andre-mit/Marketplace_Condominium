@@ -1,13 +1,11 @@
-﻿using Market.MobileApp.Models;
-using Market.MobileApp.PageModels;
-
-namespace Market.MobileApp.Pages
+﻿namespace Market.MobileApp.Pages
 {
     public partial class LoginPage : ContentPage
     {
-        public LoginPage()
+        public LoginPage(LoginPageModel model)
         {
             InitializeComponent();
+            BindingContext = model;
         }
     }
 }
