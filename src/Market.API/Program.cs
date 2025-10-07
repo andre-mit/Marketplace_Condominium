@@ -1,5 +1,6 @@
 using FirebaseAdmin;
 using Market.API.Data;
+using Market.API.Data.Configurations;
 using Market.API.Data.Repositories;
 using Market.API.Hubs;
 using Market.API.Services;
@@ -58,13 +59,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     LastName = "User",
                     Email =
                         builder.Configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
-                    CPF = "000.000.000-00",
+                    Cpf = "000.000.000-00",
                     PasswordHash =
                         BCrypt.Net.BCrypt.HashPassword(builder.Configuration.GetValue<string>("AdminUser:Password") ??
                                                        "admin123"),
                     Birth = new DateOnly(1990, 1, 1),
                     Unit = "0",
-                    Tower = "0"
+                    Tower = "0",
+                    CreatedAt = new DateTime(2025, 1, 1),
+                    UpdatedAt = new DateTime(2025, 1, 1)
                 });
 
                 await context.SaveChangesAsync(ct);
@@ -74,6 +77,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 AddServices(builder.Services);
 AddRepositories(builder.Services);
+
+builder.Services.AddScoped<IEntityTypeConfiguration<User>, UserConfiguration>();
 
 var app = builder.Build();
 

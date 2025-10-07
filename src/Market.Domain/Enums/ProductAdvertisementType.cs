@@ -1,4 +1,4 @@
-namespace Domain.Enums;
+namespace Market.Domain.Enums;
 
 public enum ProductAdvertisementType : byte
 {

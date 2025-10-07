@@ -18,7 +18,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatSessionRepository chatSession
             throw new HubException("Chat session does not exist");
         }
 
-        if (chatSession.CustomerId != userId && chatSession.SellerId != userId)
+        if (chatSession.BuyerId != userId && chatSession.SellerId != userId)
         {
             logger.LogWarning("User {UserId} attempted to send message to unauthorized chat session {ChatSessionId}", userId, chatSessionId);
             throw new HubException("You are not a participant in this chat session");

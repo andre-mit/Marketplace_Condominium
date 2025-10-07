@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Market.Domain.Entities;
 
-namespace Domain.Queries;
+namespace Market.Domain.Queries;
 
 public static class ProductQueries
 {

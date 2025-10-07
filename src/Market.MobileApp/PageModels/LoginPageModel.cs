@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Market.MobileApp.PageModels
 {
-    public partial class LoginPageModel : ObservableObject
+    public partial class LoginPageModel(IAuthService authService) : ObservableObject
     {
         [ObservableProperty]
         private string _email = string.Empty;
@@ -19,12 +19,14 @@ namespace Market.MobileApp.PageModels
         [RelayCommand]
         private async Task LoginAsync()
         {
-            // Implement login logic here
-            await Task.Delay(1000); // Simulate a login delay
-        }
-
-        public LoginPageModel()
-        {
+            try
+            {
+                await authService.LoginAsync(Email, Password);
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Login Failed", ex.Message, "OK");
+            }
         }
 
         [RelayCommand]

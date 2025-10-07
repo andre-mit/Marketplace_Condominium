@@ -13,9 +13,9 @@ public class ChatSessionConfiguration : IEntityTypeConfiguration<ChatSession>
             .HasForeignKey(cs => cs.SellerId)
             .OnDelete(DeleteBehavior.Restrict);
         
-        builder.HasOne(cs => cs.Customer)
+        builder.HasOne(cs => cs.Buyer)
             .WithMany(u => u.ChatCustomerSessions)
-            .HasForeignKey(cs => cs.CustomerId)
+            .HasForeignKey(cs => cs.BuyerId)
             .OnDelete(DeleteBehavior.Restrict);
         
         builder.HasOne(cs => cs.Product)

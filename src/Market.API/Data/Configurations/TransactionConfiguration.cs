@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Market.API.Data.Configurations;
 
-public class SaleConfiguration : IEntityTypeConfiguration<Sale>
+public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 {
-    public void Configure(EntityTypeBuilder<Sale> builder)
+    public void Configure(EntityTypeBuilder<Transaction> builder)
     {
         builder.HasOne(s => s.Product)
             .WithMany(p => p.Sales)

@@ -18,7 +18,7 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
         var chatSession = new ChatSession
         {
             ProductId = productId,
-            CustomerId = customerId,
+            BuyerId = customerId,
             SellerId = product.OwnerId
         };
         
@@ -39,7 +39,7 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
     {
         return await context.ChatSessions
             .AsNoTracking()
-            .Where(cs => cs.CustomerId == userId || cs.SellerId == userId)
+            .Where(cs => cs.BuyerId == userId || cs.SellerId == userId)
             .Include(cs => cs.Messages)
             .ToListAsync();
     }

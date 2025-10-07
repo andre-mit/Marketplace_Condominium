@@ -1,6 +1,6 @@
 namespace Market.Domain.Entities;
 
-public class Sale
+public class Transaction
 {
     public Guid Id { get; set; }
     
@@ -19,6 +19,5 @@ public class Sale
     public bool IsCompleted => SellerConfirmed && BuyerConfirmed;
     public DateTime? CompletedAt { get; set; }
     
-    public Rating? SellerRating { get; set; }
-    public Rating? BuyerRating { get; set; }
+    public ICollection<Rating> Ratings { get; set; } = new List<Rating>(2);
 }

@@ -7,8 +7,8 @@ public class ChatSession
     public Guid SellerId { get; set; }
     public User Seller { get; set; }
     
-    public Guid CustomerId { get; set; }
-    public User? Customer { get; set; }
+    public Guid BuyerId { get; set; }
+    public User? Buyer { get; set; }
     
     public int ProductId { get; set; }
     public Product? Product { get; set; }

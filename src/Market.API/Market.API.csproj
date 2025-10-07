@@ -48,4 +48,8 @@
       <ProjectReference Include="..\Market.Domain\Market.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Data\Migrations\" />
+    </ItemGroup>
+
 </Project>

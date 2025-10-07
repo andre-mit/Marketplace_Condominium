@@ -11,18 +11,40 @@ namespace Market.MobileApp.PageModels.ControlModels
 {
     public partial class PasswordEntryModel : ObservableObject
     {
-        public PasswordEntryModel() { }
+        public PasswordEntryModel(string placeholder, string password, bool isPassword)
+        {
+            Placeholder = placeholder;
+            Text = password;
+            IsPassword = isPassword;
+        }
 
         [ObservableProperty]
-        private string _password = string.Empty;
+        private string _text;
 
         [ObservableProperty]
-        private bool _isPasswordVisible = false;
+        private string _placeholder;
+
+        [ObservableProperty]
+        private bool _isPassword;
+
+
+        [ObservableProperty]
+        private ImageSource _icon;
 
         [RelayCommand]
         private void TogglePasswordVisibility()
         {
-            IsPasswordVisible = !IsPasswordVisible;
+            IsPassword = !IsPassword;
+
+            var iconName = IsPassword ? "IconEyeHide" : "IconEye";
+
+            Application.Current?.Resources.MergedDictionaries.Where(md => md.Source.OriginalString.Contains("AppStyles")).ToList().ForEach(dictionary =>
+            {
+                if (dictionary.TryGetValue(iconName, out var resource))
+                {
+                    Icon = resource as ImageSource;
+                }
+            });
         }
     }
 }

@@ -1,10 +1,22 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+using Market.MobileApp.PageModels.ControlModels;
+using System.Linq;
 
 namespace Market.MobileApp.Pages.Controls;
 
 public partial class PasswordEntry : ContentView
 {
-    private bool isPasswordVisible = false;
+    public static readonly BindableProperty IsPasswordProperty =
+        BindableProperty.Create(
+            propertyName: nameof(IsPassword),
+            returnType: typeof(bool),
+            declaringType: typeof(PasswordEntry),
+            defaultValue: true);
+
+    private bool IsPassword
+    {
+        get => (bool)GetValue(IsPasswordProperty);
+        set => SetValue(IsPasswordProperty, value);
+    }
 
     public static readonly BindableProperty TextProperty =
         BindableProperty.Create(
@@ -37,17 +49,22 @@ public partial class PasswordEntry : ContentView
     public PasswordEntry()
     {
         InitializeComponent();
+        BindingContext = new PasswordEntryModel(Placeholder, Text, IsPassword);
     }
 
     private void OnToggleVisibilityClicked(object sender, EventArgs e)
     {
-        //isPasswordVisible = !isPasswordVisible;
-        //PasswordInput.IsPassword = !isPasswordVisible;
+        IsPassword = !IsPassword;
 
-        //// Atualiza a imagem do botão
-        //var button = (ImageButton)sender;
-        //button.Source = isPasswordVisible
-        //    ? "eye_hidden_icon.png"
-        //    : "eye_visible_icon.png";
+        var iconName = IsPassword ? "IconEyeHide" : "IconEye";
+
+        Application.Current?.Resources.MergedDictionaries.Where(md => md.Source.OriginalString.Contains("AppStyles")).ToList().ForEach(dictionary =>
+        {
+            if (dictionary.TryGetValue(iconName, out var resource))
+            {
+                var button = (Button)sender;
+                button.ImageSource = resource as ImageSource;
+            }
+        });
     }
 }

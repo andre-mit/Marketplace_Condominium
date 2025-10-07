@@ -20,18 +20,10 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <StackLayout VerticalOptions="Center">
+    <StackLayout VerticalOptions="Center" Margin="24,0">
         <StackLayout Spacing="16">
-
             <Label Text="Entrar" VerticalOptions="Center" HorizontalOptions="Center" FontSize="Large" />
             <Entry Text="{Binding Email}" SemanticProperties.Description="Email" Placeholder="Email / CPF" />
-            <!--<Entry Text="{Binding Password}" SemanticProperties.Description="Password" Placeholder="Senha" IsPassword="true" />-->
-            <!--Password entry with button to visible-->
-            <!--<controls:PasswordEntry
-                Placeholder="Senha"
-                Text="{Binding Password}"
-                SemanticProperties.Description="Password"
-                IsPassword="true" />-->
             <controls:PasswordEntry
                 Placeholder="Senha"
                 Text="{Binding Password}"

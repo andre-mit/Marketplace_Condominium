@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Market.API.Helpers;
 using Market.API.Services.Interfaces;
 using Market.Domain.Repositories;
+using Market.SharedApplication.ViewModels.AuthViewModels;
 using Market.SharedApplication.ViewModels.UserViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ public class UsersController(ILogger<UsersController> logger, IUsersRepository u
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                CPF = model.CPF,
+                Cpf = model.CPF,
                 Email = model.Email,
                 PasswordHash = password,
                 Birth = model.Birth,
@@ -72,5 +73,33 @@ public class UsersController(ILogger<UsersController> logger, IUsersRepository u
             return NotFound("User not found");
 
         return Ok(user);
+    }
+    
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginRequestViewModel model)
+    {
+        try
+        {
+            var user = authService.Authenticate(model.Email, model.Password);
+            if (user == null)
+            {
+                logger.LogWarning("Failed login attempt for email: {Email}", model.Email);
+                return Unauthorized("Invalid email or password");
+            }
+
+            var token = authService.CreateToken(user);
+
+            return Ok(new LoginResponseViewModel
+            {
+                AccessToken = token,
+                User = user
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during login for email: {Email}", model.Email);
+            return BadRequest(ex.Message);
+        }
     }
 }

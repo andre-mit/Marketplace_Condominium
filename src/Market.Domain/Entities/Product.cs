@@ -1,4 +1,4 @@
-using Domain.Enums;
+using Market.Domain.Enums;
 
 namespace Market.Domain.Entities;
 
@@ -9,7 +9,15 @@ public class Product
     public required string Description { get; set; }
     public required string? ImageUrl { get; set; }
     public decimal? Price { get; set; }
+    
+    public bool IsForSale { get; set; }
+    public bool IsForExchange { get; set; }
+    public bool IsForDonation { get; set; }
+    
     public string? ExchangeMessage { get; set; }
+    
+    public ProductCondition Condition { get; set; }
+    
     public bool IsAvailable { get; set; } = true;
     
     public Guid OwnerId { get; set; }
@@ -22,6 +30,6 @@ public class Product
     
     public ICollection<Image>? Images { get; set; } = new List<Image>();
     
-    public ICollection<Sale>? Sales { get; set; } = new List<Sale>();
+    public ICollection<Transaction>? Sales { get; set; } = new List<Transaction>();
     public ICollection<ChatSession>? ChatSessions { get; set; }
 }

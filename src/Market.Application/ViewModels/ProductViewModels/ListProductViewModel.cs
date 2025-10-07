@@ -1,4 +1,4 @@
-using Domain.Enums;
+using Market.Domain.Enums;
 
 namespace Market.SharedApplication.ViewModels.ProductViewModels;
 

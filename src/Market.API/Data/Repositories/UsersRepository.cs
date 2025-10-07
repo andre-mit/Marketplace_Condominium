@@ -8,10 +8,10 @@ public class UsersRepository(ApplicationDbContext context) : IUsersRepository
 {
     public User? GetById(Guid id) => context.Users.Find(id);
 
-    public bool UserAlreadyExists(string email, string cpf) => context.Users.Any(u => u.Email == email || u.CPF == cpf);
+    public bool UserAlreadyExists(string email, string cpf) => context.Users.Any(u => u.Email == email || u.Cpf == cpf);
 
     public User? GetByEmail(string email) => context.Users.Include(u => u.Roles).FirstOrDefault(u => u.Email == email);
-    public User? GetByCPF(string cpf) => context.Users.FirstOrDefault(u => u.CPF == cpf);
+    public User? GetByCPF(string cpf) => context.Users.FirstOrDefault(u => u.Cpf == cpf);
 
     public async void Add(User user)
     {
