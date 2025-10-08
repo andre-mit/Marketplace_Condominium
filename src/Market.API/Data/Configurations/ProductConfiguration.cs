@@ -23,7 +23,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(p => p.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
         
-        builder.HasMany(p => p.Sales)
+        builder.HasMany(p => p.Transactions)
             .WithOne(s => s.Product)
             .HasForeignKey(s => s.ProductId)
             .OnDelete(DeleteBehavior.SetNull);

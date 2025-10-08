@@ -25,7 +25,7 @@ public static class ProductQueries
         return product => product.Name.Contains(searchTerm) || product.Description.Contains(searchTerm);
     }
     
-    public static Expression<Func<Product, bool>> GetByAdvertisementType(params Domain.Enums.ProductAdvertisementType[] types)
+    public static Expression<Func<Product, bool>> GetByAdvertisementType(params Domain.Enums.TransactionType[] types)
     {
         return product => product.AdvertisementTypes.Any(type => types.Contains(type));
     }

@@ -15,7 +15,7 @@ public class ListProductViewModel
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
-    public required ProductAdvertisementType[] AdvertisementTypes { get; set; }
+    public required TransactionType[] AdvertisementTypes { get; set; }
 
     public class UserListForProductViewModel
     {

@@ -1,6 +1,6 @@
 namespace Market.Domain.Enums;
 
-public enum ProductAdvertisementType : byte
+public enum TransactionType : byte
 {
     Sale,
     Donation,

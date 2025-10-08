@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Market.API.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251007004546_InitialCreate")]
+    [Migration("20251008234529_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -135,15 +135,6 @@ namespace Market.API.Data.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsForDonation")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsForExchange")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsForSale")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -248,14 +239,14 @@ namespace Market.API.Data.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("SaleDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("SellerConfirmed")
                         .HasColumnType("bit");
 
                     b.Property<Guid>("SellerId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("TransactionType")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
@@ -449,7 +440,7 @@ namespace Market.API.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("Market.Domain.Entities.Product", "Product")
-                        .WithMany("Sales")
+                        .WithMany("Transactions")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -493,7 +484,7 @@ namespace Market.API.Data.Migrations
 
                     b.Navigation("Images");
 
-                    b.Navigation("Sales");
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Transaction", b =>

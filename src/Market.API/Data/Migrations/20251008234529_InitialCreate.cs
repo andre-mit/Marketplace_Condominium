@@ -57,9 +57,6 @@ namespace Market.API.Data.Migrations
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
-                    IsForSale = table.Column<bool>(type: "bit", nullable: false),
-                    IsForExchange = table.Column<bool>(type: "bit", nullable: false),
-                    IsForDonation = table.Column<bool>(type: "bit", nullable: false),
                     ExchangeMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Condition = table.Column<byte>(type: "tinyint", nullable: false),
                     IsAvailable = table.Column<bool>(type: "bit", nullable: false),
@@ -165,8 +162,8 @@ namespace Market.API.Data.Migrations
                     BuyerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     BuyerConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TransactionType = table.Column<byte>(type: "tinyint", nullable: false)
                 },
                 constraints: table =>
                 {

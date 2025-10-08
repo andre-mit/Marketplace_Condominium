@@ -10,10 +10,6 @@ public class Product
     public required string? ImageUrl { get; set; }
     public decimal? Price { get; set; }
     
-    public bool IsForSale { get; set; }
-    public bool IsForExchange { get; set; }
-    public bool IsForDonation { get; set; }
-    
     public string? ExchangeMessage { get; set; }
     
     public ProductCondition Condition { get; set; }
@@ -26,10 +22,10 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
-    public required ProductAdvertisementType[] AdvertisementTypes { get; set; }
+    public required TransactionType[] AdvertisementTypes { get; set; }
     
     public ICollection<Image>? Images { get; set; } = new List<Image>();
     
-    public ICollection<Transaction>? Sales { get; set; } = new List<Transaction>();
+    public ICollection<Transaction>? Transactions { get; set; } = new List<Transaction>();
     public ICollection<ChatSession>? ChatSessions { get; set; }
 }
