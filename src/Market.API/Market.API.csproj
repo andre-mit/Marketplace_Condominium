@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="FirebaseAdmin" Version="3.4.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
@@ -43,8 +44,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Market.Application\Market.Application.csproj" />
+      <ProjectReference Include="..\Market.Application\Market.SharedApplication.csproj" />
       <ProjectReference Include="..\Market.Domain\Market.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Data\Migrations\" />
     </ItemGroup>
 
 </Project>

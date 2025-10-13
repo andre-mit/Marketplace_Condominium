@@ -1,6 +1,8 @@
+using Market.Domain.Enums;
+
 namespace Market.Domain.Entities;
 
-public class Sale
+public class Transaction
 {
     public Guid Id { get; set; }
     
@@ -14,11 +16,10 @@ public class Sale
     
     public int ProductId { get; set; }
     public required Product Product { get; set; }
-    
-    public DateTime SaleDate { get; set; } = DateTime.Now;
     public bool IsCompleted => SellerConfirmed && BuyerConfirmed;
     public DateTime? CompletedAt { get; set; }
     
-    public Rating? SellerRating { get; set; }
-    public Rating? BuyerRating { get; set; }
+    public required TransactionType TransactionType { get; set; }
+    
+    public ICollection<Rating> Ratings { get; set; } = new List<Rating>(2);
 }

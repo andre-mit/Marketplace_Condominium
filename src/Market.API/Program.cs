@@ -1,8 +1,12 @@
+using FirebaseAdmin;
 using Market.API.Data;
+using Market.API.Data.Configurations;
+using Market.API.Data.Repositories;
 using Market.API.Hubs;
 using Market.API.Services;
 using Market.API.Services.Interfaces;
 using Market.Domain.Entities;
+using Market.Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -43,41 +47,46 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"))
-        .UseAsyncSeeding(async (context, _, ct) =>
+    .UseAsyncSeeding(async (context, _, ct) =>
+    {
+        var hasData = await context.Set<User>().AnyAsync(x => true, cancellationToken: ct);
+        if (!hasData)
         {
-            var hasData = await context.Set<User>().AnyAsync(x => true, cancellationToken: ct);
-            if (!hasData)
+            context.Set<User>().Add(new User
             {
-                context.Set<User>().Add(new User
-                {
-                    Id = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"),
-                    FirstName = "Admin",
-                    LastName = "User",
-                    Email =
-                        builder.Configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
-                    CPF = "000.000.000-00",
-                    PasswordHash =
-                        BCrypt.Net.BCrypt.HashPassword(builder.Configuration.GetValue<string>("AdminUser:Password") ??
-                                                       "admin123"),
-                    Birth = new DateOnly(1990, 1, 1),
-                    Unit = "0",
-                    Tower = "0"
-                });
-
-                await context.SaveChangesAsync(ct);
-            }
-        });
+                Id = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"),
+                FirstName = "Admin",
+                LastName = "User",
+                Email =
+                    builder.Configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
+                Cpf = "000.000.000-00",
+                PasswordHash =
+                    BCrypt.Net.BCrypt.HashPassword(builder.Configuration.GetValue<string>("AdminUser:Password") ??
+                                                   "admin123"),
+                Birth = new DateOnly(1990, 1, 1),
+                Unit = "0",
+                Tower = "0",
+                CreatedAt = new DateTime(2025, 1, 1),
+                UpdatedAt = new DateTime(2025, 1, 1)
+            });
+    
+            await context.SaveChangesAsync(ct);
+        }
+    });
 });
 
 AddServices(builder.Services);
+AddRepositories(builder.Services);
+
+builder.Services.AddScoped<IEntityTypeConfiguration<User>, UserConfiguration>();
 
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
-await using (var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>())
-{
-    await dbContext.Database.EnsureCreatedAsync();
-}
+// await using (var scope = app.Services.CreateAsyncScope())
+// await using (var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>())
+// {
+//     await dbContext.Database.EnsureCreatedAsync();
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -99,24 +108,15 @@ app.Run();
 
 static void AddServices(IServiceCollection services)
 {
-    var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-        .Where(a => a.FullName != null && a.FullName.StartsWith("Market"))
-        .ToArray();
+    services.AddSingleton<IPushNotificationService, PushNotificationService>();
+    
+    services.AddTransient<IAuthService, AuthService>();
+}
 
-    var types = assemblies
-        .SelectMany(a => a.GetTypes())
-        .Where(t => t.IsClass && !t.IsAbstract)
-        .ToArray();
-
-    foreach (var type in types)
-    {
-        var interfaces = type.GetInterfaces()
-            .Where(i => i.Name == $"I{type.Name}")
-            .ToArray();
-
-        foreach (var @interface in interfaces)
-        {
-            services.AddTransient(@interface, type);
-        }
-    }
+static void AddRepositories(IServiceCollection services)
+{
+    services.AddScoped<IUsersRepository, UsersRepository>();
+    services.AddScoped<IProductsRepository, ProductRepository>();
+    services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
+    services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 }

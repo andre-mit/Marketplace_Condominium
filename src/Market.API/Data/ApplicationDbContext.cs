@@ -1,21 +1,28 @@
+using System.Reflection;
+using Market.API.Data.Configurations;
 using Market.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Market.API.Data;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : DbContext(options)
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        modelBuilder.ApplyConfiguration(new UserConfiguration(configuration));
+        modelBuilder.ApplyConfiguration(new ProductConfiguration());
+        modelBuilder.ApplyConfiguration(new TransactionConfiguration());
+        modelBuilder.ApplyConfiguration(new RatingConfiguration());
+        modelBuilder.ApplyConfiguration(new RoleConfiguration());
+        modelBuilder.ApplyConfiguration(new ChatSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new ChatMessageConfiguration());
         
         base.OnModelCreating(modelBuilder);
     }
     
-    // Define DbSet properties for your entities here
     public DbSet<User> Users { get; set; }
     public DbSet<Product> Products { get; set; }
-    public DbSet<Sale> Sales { get; set; }
+    public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<Role> Roles { get; set; }
     

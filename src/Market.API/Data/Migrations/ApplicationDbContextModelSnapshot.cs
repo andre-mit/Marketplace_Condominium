@@ -17,7 +17,7 @@ namespace Market.API.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.20")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -48,7 +48,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.ChatSession", b =>
@@ -57,11 +57,11 @@ namespace Market.API.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("BuyerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -71,13 +71,13 @@ namespace Market.API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
+                    b.HasIndex("BuyerId");
 
                     b.HasIndex("ProductId");
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("ChatSessions", (string)null);
+                    b.ToTable("ChatSessions");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Image", b =>
@@ -97,7 +97,7 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Image", (string)null);
+                    b.ToTable("Image");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Product", b =>
@@ -108,9 +108,12 @@ namespace Market.API.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AdvertisementTypes")
+                    b.PrimitiveCollection<string>("AdvertisementTypes")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte>("Condition")
+                        .HasColumnType("tinyint");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -150,13 +153,18 @@ namespace Market.API.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Rating", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RaterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -170,9 +178,13 @@ namespace Market.API.Data.Migrations
                     b.Property<byte>("Score")
                         .HasColumnType("tinyint");
 
-                    b.HasKey("Id");
+                    b.HasKey("TransactionId", "RaterId", "RatedId");
 
-                    b.ToTable("Ratings", (string)null);
+                    b.HasIndex("RatedId");
+
+                    b.HasIndex("RaterId");
+
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.Role", b =>
@@ -191,7 +203,7 @@ namespace Market.API.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -206,7 +218,7 @@ namespace Market.API.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Market.Domain.Entities.Sale", b =>
+            modelBuilder.Entity("Market.Domain.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -218,17 +230,11 @@ namespace Market.API.Data.Migrations
                     b.Property<Guid>("BuyerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("BuyerRatingId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("SaleDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("SellerConfirmed")
                         .HasColumnType("bit");
@@ -236,22 +242,18 @@ namespace Market.API.Data.Migrations
                     b.Property<Guid>("SellerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SellerRatingId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<byte>("TransactionType")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BuyerId");
 
-                    b.HasIndex("BuyerRatingId");
-
                     b.HasIndex("ProductId");
 
                     b.HasIndex("SellerId");
 
-                    b.HasIndex("SellerRatingId");
-
-                    b.ToTable("Sales", (string)null);
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.User", b =>
@@ -263,51 +265,72 @@ namespace Market.API.Data.Migrations
                     b.Property<DateOnly>("Birth")
                         .HasColumnType("date");
 
-                    b.Property<string>("CPF")
+                    b.Property<string>("Cpf")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Tower")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Unit")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("VerificationStatus")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.HasIndex("Cpf")
+                        .IsUnique();
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("RoleUser", b =>
+            modelBuilder.Entity("UserRole", b =>
                 {
-                    b.Property<Guid>("RolesId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("UsersId")
+                    b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("RolesId", "UsersId");
+                    b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("UsersId");
+                    b.HasIndex("RoleId");
 
-                    b.ToTable("RoleUser", (string)null);
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.ChatMessage", b =>
@@ -331,16 +354,16 @@ namespace Market.API.Data.Migrations
 
             modelBuilder.Entity("Market.Domain.Entities.ChatSession", b =>
                 {
-                    b.HasOne("Market.Domain.Entities.User", "Customer")
+                    b.HasOne("Market.Domain.Entities.User", "Buyer")
                         .WithMany("ChatCustomerSessions")
-                        .HasForeignKey("CustomerId")
+                        .HasForeignKey("BuyerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Market.Domain.Entities.Product", "Product")
                         .WithMany("ChatSessions")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Market.Domain.Entities.User", "Seller")
@@ -349,7 +372,7 @@ namespace Market.API.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Customer");
+                    b.Navigation("Buyer");
 
                     b.Navigation("Product");
 
@@ -378,7 +401,34 @@ namespace Market.API.Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Market.Domain.Entities.Sale", b =>
+            modelBuilder.Entity("Market.Domain.Entities.Rating", b =>
+                {
+                    b.HasOne("Market.Domain.Entities.User", "Rated")
+                        .WithMany("ReceivedRatings")
+                        .HasForeignKey("RatedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Market.Domain.Entities.User", "Rater")
+                        .WithMany("GivenRatings")
+                        .HasForeignKey("RaterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Market.Domain.Entities.Transaction", "Transaction")
+                        .WithMany("Ratings")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rated");
+
+                    b.Navigation("Rater");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("Market.Domain.Entities.Transaction", b =>
                 {
                     b.HasOne("Market.Domain.Entities.User", "Buyer")
                         .WithMany("Purchases")
@@ -386,12 +436,8 @@ namespace Market.API.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Market.Domain.Entities.Rating", "BuyerRating")
-                        .WithMany()
-                        .HasForeignKey("BuyerRatingId");
-
                     b.HasOne("Market.Domain.Entities.Product", "Product")
-                        .WithMany("Sales")
+                        .WithMany("Transactions")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -402,32 +448,24 @@ namespace Market.API.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Market.Domain.Entities.Rating", "SellerRating")
-                        .WithMany()
-                        .HasForeignKey("SellerRatingId");
-
                     b.Navigation("Buyer");
-
-                    b.Navigation("BuyerRating");
 
                     b.Navigation("Product");
 
                     b.Navigation("Seller");
-
-                    b.Navigation("SellerRating");
                 });
 
-            modelBuilder.Entity("RoleUser", b =>
+            modelBuilder.Entity("UserRole", b =>
                 {
                     b.HasOne("Market.Domain.Entities.Role", null)
                         .WithMany()
-                        .HasForeignKey("RolesId")
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Market.Domain.Entities.User", null)
                         .WithMany()
-                        .HasForeignKey("UsersId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -443,7 +481,12 @@ namespace Market.API.Data.Migrations
 
                     b.Navigation("Images");
 
-                    b.Navigation("Sales");
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("Market.Domain.Entities.Transaction", b =>
+                {
+                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("Market.Domain.Entities.User", b =>
@@ -452,9 +495,13 @@ namespace Market.API.Data.Migrations
 
                     b.Navigation("ChatSellerSessions");
 
+                    b.Navigation("GivenRatings");
+
                     b.Navigation("Products");
 
                     b.Navigation("Purchases");
+
+                    b.Navigation("ReceivedRatings");
 
                     b.Navigation("Sales");
                 });

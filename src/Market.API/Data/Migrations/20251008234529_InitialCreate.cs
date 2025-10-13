@@ -14,20 +14,6 @@ namespace Market.API.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Ratings",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Review = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    Score = table.Column<byte>(type: "tinyint", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Ratings", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -44,14 +30,17 @@ namespace Market.API.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CPF = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Cpf = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Birth = table.Column<DateOnly>(type: "date", nullable: false),
-                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Tower = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Unit = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Tower = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    VerificationStatus = table.Column<byte>(type: "tinyint", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -69,6 +58,7 @@ namespace Market.API.Data.Migrations
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
                     ExchangeMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Condition = table.Column<byte>(type: "tinyint", nullable: false),
                     IsAvailable = table.Column<bool>(type: "bit", nullable: false),
                     OwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -87,24 +77,24 @@ namespace Market.API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoleUser",
+                name: "UserRoles",
                 columns: table => new
                 {
-                    RolesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UsersId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoleUser", x => new { x.RolesId, x.UsersId });
+                    table.PrimaryKey("PK_UserRoles", x => new { x.UserId, x.RoleId });
                     table.ForeignKey(
-                        name: "FK_RoleUser_Roles_RolesId",
-                        column: x => x.RolesId,
+                        name: "FK_UserRoles_Roles_RoleId",
+                        column: x => x.RoleId,
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_RoleUser_Users_UsersId",
-                        column: x => x.UsersId,
+                        name: "FK_UserRoles_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -116,7 +106,7 @@ namespace Market.API.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SellerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BuyerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -128,10 +118,10 @@ namespace Market.API.Data.Migrations
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ChatSessions_Users_CustomerId",
-                        column: x => x.CustomerId,
+                        name: "FK_ChatSessions_Users_BuyerId",
+                        column: x => x.BuyerId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -163,7 +153,7 @@ namespace Market.API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sales",
+                name: "Transactions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -172,38 +162,26 @@ namespace Market.API.Data.Migrations
                     BuyerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     BuyerConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    SellerRatingId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    BuyerRatingId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    TransactionType = table.Column<byte>(type: "tinyint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sales", x => x.Id);
+                    table.PrimaryKey("PK_Transactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Sales_Products_ProductId",
+                        name: "FK_Transactions_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Sales_Ratings_BuyerRatingId",
-                        column: x => x.BuyerRatingId,
-                        principalTable: "Ratings",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Sales_Ratings_SellerRatingId",
-                        column: x => x.SellerRatingId,
-                        principalTable: "Ratings",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Sales_Users_BuyerId",
+                        name: "FK_Transactions_Users_BuyerId",
                         column: x => x.BuyerId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Sales_Users_SellerId",
+                        name: "FK_Transactions_Users_SellerId",
                         column: x => x.SellerId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -237,6 +215,40 @@ namespace Market.API.Data.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Ratings",
+                columns: table => new
+                {
+                    TransactionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RaterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Review = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    Score = table.Column<byte>(type: "tinyint", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ratings", x => new { x.TransactionId, x.RaterId, x.RatedId });
+                    table.ForeignKey(
+                        name: "FK_Ratings_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Ratings_Users_RatedId",
+                        column: x => x.RatedId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Ratings_Users_RaterId",
+                        column: x => x.RaterId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.InsertData(
                 table: "Roles",
                 columns: new[] { "Id", "Name" },
@@ -257,9 +269,9 @@ namespace Market.API.Data.Migrations
                 column: "SenderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChatSessions_CustomerId",
+                name: "IX_ChatSessions_BuyerId",
                 table: "ChatSessions",
-                column: "CustomerId");
+                column: "BuyerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChatSessions_ProductId",
@@ -287,40 +299,52 @@ namespace Market.API.Data.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Ratings_RatedId",
+                table: "Ratings",
+                column: "RatedId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_RaterId",
+                table: "Ratings",
+                column: "RaterId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Roles_Name",
                 table: "Roles",
                 column: "Name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleUser_UsersId",
-                table: "RoleUser",
-                column: "UsersId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Sales_BuyerId",
-                table: "Sales",
+                name: "IX_Transactions_BuyerId",
+                table: "Transactions",
                 column: "BuyerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sales_BuyerRatingId",
-                table: "Sales",
-                column: "BuyerRatingId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Sales_ProductId",
-                table: "Sales",
+                name: "IX_Transactions_ProductId",
+                table: "Transactions",
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sales_SellerId",
-                table: "Sales",
+                name: "IX_Transactions_SellerId",
+                table: "Transactions",
                 column: "SellerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sales_SellerRatingId",
-                table: "Sales",
-                column: "SellerRatingId");
+                name: "IX_UserRoles_RoleId",
+                table: "UserRoles",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Cpf",
+                table: "Users",
+                column: "Cpf",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -333,19 +357,19 @@ namespace Market.API.Data.Migrations
                 name: "Image");
 
             migrationBuilder.DropTable(
-                name: "RoleUser");
+                name: "Ratings");
 
             migrationBuilder.DropTable(
-                name: "Sales");
+                name: "UserRoles");
 
             migrationBuilder.DropTable(
                 name: "ChatSessions");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "Transactions");
 
             migrationBuilder.DropTable(
-                name: "Ratings");
+                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "Products");

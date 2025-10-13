@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Market.Application.ViewModels.AuthViewModels;
+namespace Market.SharedApplication.ViewModels.AuthViewModels;
 
 public record LoginRequestViewModel([Required] string Email, [Required] string Password);

@@ -7,8 +7,4 @@
         <RootNamespace>Market.Domain</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Compile Remove="Class1.cs" />
-    </ItemGroup>
-
 </Project>

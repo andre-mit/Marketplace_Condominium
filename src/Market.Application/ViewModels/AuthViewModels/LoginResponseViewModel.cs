@@ -1,6 +1,6 @@
-using Market.Application.ViewModels.UserViewModels;
+using Market.SharedApplication.ViewModels.UserViewModels;
 
-namespace Market.Application.ViewModels.AuthViewModels;
+namespace Market.SharedApplication.ViewModels.AuthViewModels;
 
 public class LoginResponseViewModel
 {

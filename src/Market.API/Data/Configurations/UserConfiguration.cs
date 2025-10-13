@@ -11,7 +11,7 @@ public class UserConfiguration(IConfiguration configuration) : IEntityTypeConfig
         builder.HasIndex(u => u.Email)
             .IsUnique();
 
-        builder.HasIndex(u => u.CPF)
+        builder.HasIndex(u => u.Cpf)
             .IsUnique();
 
         builder.Property(u => u.FirstName)
@@ -26,7 +26,7 @@ public class UserConfiguration(IConfiguration configuration) : IEntityTypeConfig
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(u => u.CPF)
+        builder.Property(u => u.Cpf)
             .IsRequired()
             .HasMaxLength(14);
 
@@ -54,21 +54,5 @@ public class UserConfiguration(IConfiguration configuration) : IEntityTypeConfig
             .WithOne(p => p.Owner)
             .HasForeignKey(p => p.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasData(
-            new User
-            {
-                Id = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"),
-                FirstName = "Admin",
-                LastName = "User",
-                Email =
-                    configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
-                CPF = "000.000.000-00",
-                PasswordHash =
-                    BCrypt.Net.BCrypt.HashPassword(configuration.GetValue<string>("AdminUser:Password") ?? "admin123"),
-                Birth = new DateOnly(1990, 1, 1),
-                Unit = "0",
-                Tower = "0"
-            });
     }
 }

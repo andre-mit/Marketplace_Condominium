@@ -1,6 +1,6 @@
-using Domain.Enums;
+using Market.Domain.Enums;
 
-namespace Market.Application.ViewModels.ProductViewModels;
+namespace Market.SharedApplication.ViewModels.ProductViewModels;
 
 public class ListProductViewModel
 {
@@ -15,7 +15,7 @@ public class ListProductViewModel
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
-    public required ProductAdvertisementType[] AdvertisementTypes { get; set; }
+    public required TransactionType[] AdvertisementTypes { get; set; }
 
     public class UserListForProductViewModel
     {

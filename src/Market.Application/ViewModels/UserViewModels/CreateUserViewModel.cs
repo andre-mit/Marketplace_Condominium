@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Market.Application.ViewModels.UserViewModels;
+namespace Market.SharedApplication.ViewModels.UserViewModels;
 
 public class CreateUserViewModel
 {
