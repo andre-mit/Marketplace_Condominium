@@ -1,8 +1,8 @@
 using Market.API.Services.Interfaces;
-using Market.Application.ViewModels.AuthViewModels;
-using Market.Application.ViewModels.UserViewModels;
 using Market.Domain.Entities;
 using Market.Domain.Repositories;
+using Market.SharedApplication.ViewModels.AuthViewModels;
+using Market.SharedApplication.ViewModels.UserViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Market.API.Controllers;
@@ -53,7 +53,7 @@ public class AuthController(ILogger<AuthController> logger, IUsersRepository use
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                CPF = model.CPF,
+                Cpf = model.CPF,
                 Email = model.Email,
                 PasswordHash = password,
                 Birth = model.Birth,

@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Market.API.Helpers;
 using Market.API.Services.Interfaces;
-using Market.Application.ViewModels.UserViewModels;
 using Market.Domain.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
