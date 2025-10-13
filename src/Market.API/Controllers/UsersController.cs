@@ -14,43 +14,6 @@ namespace Market.API.Controllers;
 public class UsersController(ILogger<UsersController> logger, IUsersRepository usersRepository, IAuthService authService)
     : ControllerBase
 {
-    [HttpPost]
-    [AllowAnonymous]
-    public IActionResult CreateUser(CreateUserViewModel model)
-    {
-        try
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (usersRepository.UserAlreadyExists(model.Email, model.CPF))
-                return Conflict("A user with the given email or CPF already exists.");
-
-            var password = authService.HashPass(model.Password);
-            var user = new Domain.Entities.User
-            {
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                CPF = model.CPF,
-                Email = model.Email,
-                PasswordHash = password,
-                Birth = model.Birth,
-                Unit = model.Unit,
-                Tower = model.Tower
-            };
-
-            usersRepository.Add(user);
-
-            ListUserViewModel createdUser = user;
-            return CreatedAtAction(nameof(GetById), new { id = user.Id }, createdUser);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error creating user");
-            return BadRequest("An error occurred while creating the user.");
-        }
-    }
-
     [HttpGet("me")]
     public IActionResult GetMe()
     {
@@ -61,6 +24,31 @@ public class UsersController(ILogger<UsersController> logger, IUsersRepository u
 
         var user = usersRepository.GetById(guid);
         return Ok(user);
+    }
+    
+    [HttpPut("me")]
+    public IActionResult UpdateMe(UpdateUserViewModel model)
+    {
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var guid))
+            return Unauthorized("Invalid user ID");
+        
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var user = usersRepository.GetById(guid);
+        if (user == null)
+            return NotFound("User not found");
+        
+        user.FirstName = model.FirstName;
+        user.LastName = model.LastName;
+
+        if (!model.Password.IsNullOrWhiteSpace())
+            user.PasswordHash = authService.HashPass(model.Password);
+
+        usersRepository.Update(user);
+        return NoContent();
     }
 
     [HttpGet("{id:guid}")]
