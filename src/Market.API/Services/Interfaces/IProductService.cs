@@ -4,6 +4,6 @@ namespace Market.API.Services.Interfaces;
 
 public interface IProductService
 {
-    Task<int> CreateProductAsync(CreateProductViewModel createProductViewModel, IFormFileCollection? images,
+    Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createProductViewModel,
         Guid userId, CancellationToken cancellationToken = default);
 }

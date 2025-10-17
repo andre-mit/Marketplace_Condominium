@@ -28,7 +28,7 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
         throw new NotImplementedException();
     }
 
-    public async Task AddProductAsync(Product product, CancellationToken cancellationToken = default)
+    public async Task<int> AddProductAsync(Product product, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

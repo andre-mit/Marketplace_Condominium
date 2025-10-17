@@ -1,4 +1,4 @@
-using FirebaseAdmin;
+using Azure.Storage.Blobs;
 using Market.API.Data;
 using Market.API.Data.Configurations;
 using Market.API.Data.Repositories;
@@ -75,7 +75,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     });
 });
 
-AddServices(builder.Services);
+AddServices(builder);
 AddRepositories(builder.Services);
 
 builder.Services.AddScoped<IEntityTypeConfiguration<User>, UserConfiguration>();
@@ -106,11 +106,17 @@ app.MapHub<ChatHub>("/chat");
 
 app.Run();
 
-static void AddServices(IServiceCollection services)
+static void AddServices(WebApplicationBuilder builder)
 {
-    services.AddSingleton<IPushNotificationService, PushNotificationService>();
+    builder.Services.AddSingleton<IPushNotificationService, PushNotificationService>();
     
-    services.AddTransient<IAuthService, AuthService>();
+    builder.Services.AddTransient<IAuthService, AuthService>();
+    builder.Services.AddTransient<IProductService, ProductService>();
+    
+    builder.Services.AddTransient<IUploadFileService, UploadFileService>();
+
+    builder.Services.AddTransient<BlobServiceClient>(_ =>
+        new BlobServiceClient(builder.Configuration.GetConnectionString("BlobStorageConnection")!));
 }
 
 static void AddRepositories(IServiceCollection services)

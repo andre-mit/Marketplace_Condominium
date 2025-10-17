@@ -2,7 +2,11 @@ using Market.Domain.Enums;
 
 namespace Market.SharedApplication.ViewModels.ProductViewModels;
 
-public class CreateProductViewModel
+/// <summary>
+/// ViewModel for creating a product with generic image type
+/// </summary>
+/// <typeparam name="T">Type of the images (e.g., IFormFile[] for file uploads)</typeparam>
+public class CreateProductViewModel<T>
 {
     public required string Name { get; set; }
     public required string Description { get; set; }
@@ -13,5 +17,5 @@ public class CreateProductViewModel
 
     public required TransactionType[] AdvertisementTypes { get; set; }
     
-    public virtual List<object> Images { get; set; }
+    public T? Images { get; set; }
 }

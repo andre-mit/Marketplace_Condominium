@@ -37,7 +37,8 @@ public class ProductsController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateProduct([FromForm] CreateProductWithImagesViewModel model,
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> CreateProduct([FromForm] CreateProductViewModel<IFormFileCollection> model,
         CancellationToken cancellationToken = default)
     {
         try
@@ -49,7 +50,7 @@ public class ProductsController(
             if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized("Invalid user ID");
             
-            var productId = await productService.CreateProductAsync(model, model.Images, userIdGuid, cancellationToken);
+            var productId = await productService.CreateProductAsync(model, userIdGuid, cancellationToken);
 
             logger.LogInformation("Created product with ID {ProductId}", productId);
             return Created();
@@ -60,9 +61,4 @@ public class ProductsController(
             return StatusCode(500, "Internal server error");
         }
     }
-}
-
-public class CreateProductWithImagesViewModel : CreateProductViewModel
-{
-    public new IFormFileCollection? Images { get; set; }
 }

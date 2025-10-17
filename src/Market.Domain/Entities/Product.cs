@@ -15,8 +15,8 @@ public class Product
     
     public bool IsAvailable { get; set; } = true;
     
-    public Guid OwnerId { get; set; }
-    public required User Owner { get; set; }
+    public required Guid OwnerId { get; set; }
+    public User? Owner { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
