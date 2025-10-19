@@ -1,34 +1,43 @@
+using Market.API.Data.Interfaces;
 using Market.API.Services.Interfaces;
 using Market.Domain.Entities;
 using Market.Domain.Repositories;
 using Market.SharedApplication.ViewModels.ProductViewModels;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Market.API.Services;
 
-public class ProductService(ILogger<ProductService> logger, IProductsRepository productsRepository, IUploadFileService uploadFileService) : IProductService
+public class ProductService(
+    ILogger<ProductService> logger,
+    IUnitOfWork unitOfWork,
+    IProductsRepository productsRepository,
+    IUploadFileService uploadFileService,
+    IDistributedCache cache) : IProductService
 {
-    public async Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createProductViewModel, Guid userId,
+    public async Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createProductViewModel,
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
+        var imageUrls = new List<string>();
         try
         {
-            var imageUrls = new List<string>();
             if (createProductViewModel.Images != null && createProductViewModel.Images.Count > 0)
             {
                 foreach (var image in createProductViewModel.Images)
                 {
-                    using var stream = image.OpenReadStream();
-                    var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName, "product-images", cancellationToken);
+                    await using var stream = image.OpenReadStream();
+                    var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName, "product-images",
+                        cancellationToken);
                     imageUrls.Add(imageUrl);
                 }
             }
-            
+
             var product = new Product
             {
                 Name = createProductViewModel.Name,
                 Description = createProductViewModel.Description,
                 Price = createProductViewModel.Price,
-                Images = imageUrls.Select(url => new Image { Url = url}).ToList(),
+                Images = imageUrls.Select(url => new Image { Url = url }).ToList(),
                 OwnerId = userId,
                 Condition = createProductViewModel.Condition,
                 AdvertisementTypes = createProductViewModel.AdvertisementTypes,
@@ -38,12 +47,24 @@ public class ProductService(ILogger<ProductService> logger, IProductsRepository 
 
             var productId = await productsRepository.AddProductAsync(product, cancellationToken);
             logger.LogInformation("Product {ProductId} created for user {UserId}", productId, userId);
-            
+
+            await unitOfWork.CommitAsync();
+
             return productId;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating product for user {UserId}", userId);
+            // add images to cache for later deletion
+            foreach (var imageUrl in imageUrls)
+            {
+                var cacheKey = $"orphaned-image-{Guid.NewGuid()}";
+                await cache.SetStringAsync(cacheKey, imageUrl, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                }, cancellationToken);
+            }
+            
             throw;
         }
     }
