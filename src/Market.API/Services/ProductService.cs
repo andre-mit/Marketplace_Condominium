@@ -12,7 +12,7 @@ public class ProductService(
     IUnitOfWork unitOfWork,
     IProductsRepository productsRepository,
     IUploadFileService uploadFileService,
-    IDistributedCache cache) : IProductService
+    IDistributedCache cache, IRedisKeyService redisKeyService) : IProductService
 {
     public async Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createProductViewModel,
         Guid userId,
@@ -66,6 +66,29 @@ public class ProductService(
             }
             
             throw;
+        }
+    }
+    
+    public async Task DeleteOrphanedImagesAsync(CancellationToken cancellationToken = default)
+    {
+        var keys = await redisKeyService.GetKeysByPrefixAsync("orphaned-image-", cancellationToken);
+        foreach (var key in keys)
+        {
+            var imageUrl = await cache.GetStringAsync(key, cancellationToken);
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                try
+                {
+                    await uploadFileService.DeleteFileAsync(imageUrl, "", cancellationToken);
+                    logger.LogInformation("Deleted orphaned image {ImageUrl}", imageUrl);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error deleting orphaned image {ImageUrl}", imageUrl);
+                }
+            }
+
+            await cache.RemoveAsync(key, cancellationToken);
         }
     }
 }

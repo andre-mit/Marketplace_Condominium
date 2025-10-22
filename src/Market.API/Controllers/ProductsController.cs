@@ -22,7 +22,7 @@ public class ProductsController(
     {
         try
         {
-            var (products, total) = await productsRepository.GetAllProductsAsync(page, 10, cancellationToken);
+            var (products, total) = await productsRepository.GetAvailableProductsAsync(page, 10, cancellationToken);
             Response.Headers.Append("X-Total-Count", total.ToString());
 
             logger.LogDebug("Fetched {Count} products", products.Count);
@@ -32,6 +32,29 @@ public class ProductsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error fetching products");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProductById([FromRoute] int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var product = await productsRepository.GetProductByIdAsync(id, cancellationToken);
+            if (product == null)
+            {
+                logger.LogWarning("Product with ID {ProductId} not found", id);
+                return NotFound();
+            }
+
+            logger.LogDebug("Fetched product with ID {ProductId}", id);
+            return Ok(product);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching product with ID {ProductId}", id);
             return StatusCode(500, "Internal server error");
         }
     }
@@ -49,7 +72,7 @@ public class ProductsController(
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
             if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized("Invalid user ID");
-            
+
             var productId = await productService.CreateProductAsync(model, userIdGuid, cancellationToken);
 
             logger.LogInformation("Created product with ID {ProductId}", productId);

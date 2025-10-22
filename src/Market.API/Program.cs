@@ -82,6 +82,7 @@ return;
 static void AddServices(WebApplicationBuilder builder)
 {
     builder.Services.AddSingleton<IPushNotificationService, PushNotificationService>();
+    builder.Services.AddSingleton<IRedisKeyService, RedisKeyService>();
     
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
     
@@ -138,6 +139,7 @@ static void AddDataServices(WebApplicationBuilder builder)
     builder.Services.AddStackExchangeRedisCache(options =>
     {
         options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+        options.InstanceName = builder.Configuration["RedisInstanceName"] ?? "MarketAPI_";
     });
 }
 #endregion
