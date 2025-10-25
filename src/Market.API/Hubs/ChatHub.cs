@@ -34,6 +34,75 @@ public class ChatHub(ILogger<ChatHub> logger, IChatSessionRepository chatSession
         });
     }
     
+    [HubMethodName("Typing")]
+    public async Task Typing(Guid chatSessionId)
+    {
+        var userId = Guid.Parse(Context.UserIdentifier!);
+        var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId);
+        if (chatSession == null)
+        {
+            logger.LogWarning("User {UserId} attempted to send typing notification to non-existent chat session {ChatSessionId}", userId, chatSessionId);
+            throw new HubException("Chat session does not exist");
+        }
+
+        if (chatSession.BuyerId != userId && chatSession.SellerId != userId)
+        {
+            logger.LogWarning("User {UserId} attempted to send typing notification to unauthorized chat session {ChatSessionId}", userId, chatSessionId);
+            throw new HubException("You are not a participant in this chat session");
+        }
+
+        await Clients.Group(chatSessionId.ToString()).SendAsync("UserTyping", new
+        {
+            ChatSessionId = chatSessionId,
+            SenderId = userId
+        });
+    }
+    
+    [HubMethodName("StopTyping")]
+    public async Task StopTyping(Guid chatSessionId)
+    {
+        var userId = Guid.Parse(Context.UserIdentifier!);
+        var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId);
+        if (chatSession == null)
+        {
+            logger.LogWarning("User {UserId} attempted to send stop typing notification to non-existent chat session {ChatSessionId}", userId, chatSessionId);
+            throw new HubException("Chat session does not exist");
+        }
+
+        if (chatSession.BuyerId != userId && chatSession.SellerId != userId)
+        {
+            logger.LogWarning("User {UserId} attempted to send stop typing notification to unauthorized chat session {ChatSessionId}", userId, chatSessionId);
+            throw new HubException("You are not a participant in this chat session");
+        }
+
+        await Clients.Group(chatSessionId.ToString()).SendAsync("UserStopTyping", new
+        {
+            ChatSessionId = chatSessionId,
+            SenderId = userId
+        });
+    }
+    
+    [HubMethodName("GetChatHistory")]
+    public async Task<IEnumerable<ChatMessage>> GetChatHistory(Guid chatSessionId)
+    {
+        var userId = Guid.Parse(Context.UserIdentifier!);
+        var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId);
+        if (chatSession == null)
+        {
+            logger.LogWarning("User {UserId} attempted to get chat history for non-existent chat session {ChatSessionId}", userId, chatSessionId);
+            throw new HubException("Chat session does not exist");
+        }
+
+        if (chatSession.BuyerId != userId && chatSession.SellerId != userId)
+        {
+            logger.LogWarning("User {UserId} attempted to get chat history for unauthorized chat session {ChatSessionId}", userId, chatSessionId);
+            throw new HubException("You are not a participant in this chat session");
+        }
+
+        var messages = await chatMessageRepository.GetMessagesByChatSessionIdAsync(chatSessionId);
+        return messages;
+    }
+    
     public override async Task OnConnectedAsync()
     {
         var userId = Guid.Parse(Context.UserIdentifier!);
