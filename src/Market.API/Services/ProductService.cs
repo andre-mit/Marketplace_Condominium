@@ -8,8 +8,7 @@ public class ProductService(
     IUnitOfWork unitOfWork,
     IProductsRepository productsRepository,
     IUploadFileService uploadFileService,
-    IDistributedCache cache,
-    IRedisKeyService redisKeyService) : IProductService
+    IDistributedCache cache) : IProductService
 {
     public async Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createUpdateProductViewModel,
         Guid userId,
