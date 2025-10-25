@@ -1,9 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-using Market.API.Services.Interfaces;
-using Market.Domain.Entities;
-using Market.Domain.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using static BCrypt.Net.BCrypt;
 

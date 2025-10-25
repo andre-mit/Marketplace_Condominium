@@ -1,4 +1,3 @@
-using Market.API.Services.Interfaces;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -17,7 +16,7 @@ public class RedisKeyService(IConnectionMultiplexer redis, IOptions<RedisCacheOp
         var fullPattern = $"{_instanceName}{prefix}*"; 
 
         var keys = new List<string>();
-        await foreach (var key in server.KeysAsync(pattern: fullPattern))
+        await foreach (var key in server.KeysAsync(pattern: fullPattern).WithCancellation(cancellationToken))
         {
             keys.Add(key.ToString().Replace(_instanceName, ""));
         }

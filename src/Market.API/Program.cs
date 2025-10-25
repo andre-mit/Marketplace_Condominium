@@ -1,13 +1,9 @@
 using Azure.Storage.Blobs;
 using Market.API.Data;
 using Market.API.Data.Configurations;
-using Market.API.Data.Interfaces;
 using Market.API.Data.Repositories;
 using Market.API.Hubs;
 using Market.API.Services;
-using Market.API.Services.Interfaces;
-using Market.Domain.Entities;
-using Market.Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -53,11 +49,13 @@ builder.Services.AddScoped<IEntityTypeConfiguration<User>, UserConfiguration>();
 
 var app = builder.Build();
 
-// await using (var scope = app.Services.CreateAsyncScope())
-// await using (var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>())
-// {
-//     await dbContext.Database.EnsureCreatedAsync();
-// }
+var shouldSeed = args.Contains("--seed-data");
+if (shouldSeed)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await using var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -79,20 +77,23 @@ app.Run();
 return;
 
 #region Local Functions
+
 static void AddServices(WebApplicationBuilder builder)
 {
     builder.Services.AddSingleton<IPushNotificationService, PushNotificationService>();
     builder.Services.AddSingleton<IRedisKeyService, RedisKeyService>();
-    
+
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-    
+
     builder.Services.AddTransient<IAuthService, AuthService>();
     builder.Services.AddTransient<IProductService, ProductService>();
-    
-    builder.Services.AddTransient<IUploadFileService, UploadFileService>();
+
+    builder.Services.AddSingleton<IUploadFileService, UploadFileService>();
 
     builder.Services.AddTransient<BlobServiceClient>(_ =>
         new BlobServiceClient(builder.Configuration.GetConnectionString("BlobStorageConnection")!));
+
+    builder.Services.AddHostedService<OrphanedItemsProcessorService>();
 }
 
 static void AddRepositories(IServiceCollection services)
@@ -110,10 +111,13 @@ static void AddDataServices(WebApplicationBuilder builder)
         options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"))
             .UseAsyncSeeding(async (context, _, ct) =>
             {
-                var hasData = await context.Set<User>().AnyAsync(x => true, cancellationToken: ct);
-                if (!hasData)
+                var hasUserData = await context.Set<User>().AnyAsync(x => true, cancellationToken: ct);
+                if (!hasUserData)
                 {
-                    context.Set<User>().Add(new User
+                    var role = await context.Set<Role>().Include(r => r.Users)
+                        .FirstAsync(r => r.Id == Constants.AdminRoleId,
+                            cancellationToken: ct);
+                    var user = new User
                     {
                         Id = new Guid("A1B2C3D4-E5F6-4789-ABCD-1234567890AB"),
                         FirstName = "Admin",
@@ -122,15 +126,19 @@ static void AddDataServices(WebApplicationBuilder builder)
                             builder.Configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
                         Cpf = "000.000.000-00",
                         PasswordHash =
-                            BCrypt.Net.BCrypt.HashPassword(builder.Configuration.GetValue<string>("AdminUser:Password") ??
-                                                           "admin123"),
+                            BCrypt.Net.BCrypt.HashPassword(
+                                builder.Configuration.GetValue<string>("AdminUser:Password") ??
+                                "admin123"),
                         Birth = new DateOnly(1990, 1, 1),
                         Unit = "0",
                         Tower = "0",
                         CreatedAt = new DateTime(2025, 1, 1),
-                        UpdatedAt = new DateTime(2025, 1, 1)
-                    });
-    
+                        UpdatedAt = new DateTime(2025, 1, 1),
+                        Roles = [role]
+                    };
+
+                    context.Set<User>().Add(user);
+
                     await context.SaveChangesAsync(ct);
                 }
             });
@@ -141,5 +149,13 @@ static void AddDataServices(WebApplicationBuilder builder)
         options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
         options.InstanceName = builder.Configuration["RedisInstanceName"] ?? "MarketAPI_";
     });
+
+    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+    {
+        var configuration = sp.GetRequiredService<IConfiguration>();
+        var redisConnectionString = configuration.GetConnectionString("RedisConnection")!;
+        return StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString);
+    });
 }
+
 #endregion

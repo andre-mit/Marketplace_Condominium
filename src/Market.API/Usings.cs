@@ -1,0 +1,10 @@
+global using System;
+global using System.Text;
+global using System.Collections.Generic;
+global using System.Threading.Tasks;
+global using Market.Domain.Entities;
+global using Market.Domain.Repositories;
+global using Market.API.Services.Interfaces;
+global using Market.API.Helpers;
+global using Market.API.Data.Interfaces;
+global using Constants = Market.API.Helpers.Constants;

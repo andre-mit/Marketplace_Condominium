@@ -1,5 +1,4 @@
 using Azure.Storage.Blobs;
-using Market.API.Services.Interfaces;
 
 namespace Market.API.Services;
 

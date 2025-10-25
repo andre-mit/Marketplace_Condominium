@@ -44,7 +44,9 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
 
     public async Task<Product?> GetProductByIdAsync(int productId, CancellationToken cancellationToken = default)
     {
-        return await context.Products.FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
+        return await context.Products.Include(p => p.Images)
+            .Include(p => p.Owner)
+            .FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
     }
 
     public async Task<int> AddProductAsync(Product product, CancellationToken cancellationToken = default)

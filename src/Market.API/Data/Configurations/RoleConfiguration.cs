@@ -1,4 +1,3 @@
-using Market.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,8 +15,8 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .IsUnique();
         
         builder.HasData(
-            new Role { Id = new Guid("C1C64A20-43D6-440E-9090-1AA2A1CA9A55"), Name = "Admin" },
-            new Role { Id = new Guid("F8A41A51-BFDB-4DCA-ADA9-B025FD2AC2B3"), Name = "User" }
+            new Role { Id = Constants.AdminRoleId, Name = "Admin" },
+            new Role { Id = Constants.UserRoleId, Name = "User" }
         );
     }
 }

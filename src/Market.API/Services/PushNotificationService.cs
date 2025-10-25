@@ -1,5 +1,4 @@
 using FirebaseAdmin;
-using Market.API.Services.Interfaces;
 
 namespace Market.API.Services;
 
