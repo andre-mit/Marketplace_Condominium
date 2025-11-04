@@ -14,6 +14,7 @@ namespace Market.API.Controllers;
 public class UsersController(
     ILogger<UsersController> logger,
     IUsersRepository usersRepository,
+    ITransactionRepository transactionRepository,
     IAuthService authService)
     : ControllerBase
 {
@@ -72,4 +73,21 @@ public class UsersController(
 
         return Ok(user);
     }
+
+    [HttpGet("{id:guid}/ratings")]
+    public IActionResult GetUserRatings(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var ratings = transactionRepository.GetUserRatingsAsync(id, cancellationToken);
+            return Ok(ratings);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving user ratings");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
+    
 }

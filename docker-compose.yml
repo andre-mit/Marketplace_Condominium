@@ -4,3 +4,37 @@
     build:
       context: .
       dockerfile: src/Market.API/Dockerfile
+  
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver_db
+    environment:
+      SA_PASSWORD: "1a2b3c4d@#$"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+  
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000" # Blob storage
+      - "10001:10001" # Queue storage
+      - "10002:10002" # Table storage
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose --location /data"
+    volumes:
+      - azurite_data:/data
+volumes:
+  sqlserver_data:
+  redis_data:
+  azurite_data:
