@@ -23,7 +23,8 @@ public class ProductService(
                 {
                     await using var stream = image.OpenReadStream();
                     var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName,
-                        Constants.ProductImagesContainer,
+                        image.ContentType,
+                        Constants.ProductImagesBucket,
                         cancellationToken);
                     imageUrls.Add(imageUrl);
                 }
@@ -45,7 +46,7 @@ public class ProductService(
             var productId = await productsRepository.AddProductAsync(product, cancellationToken);
             logger.LogInformation("Product {ProductId} created for user {UserId}", productId, userId);
 
-            await unitOfWork.CommitAsync();
+            await unitOfWork.CommitAsync(cancellationToken);
 
             return productId;
         }
@@ -96,14 +97,16 @@ public class ProductService(
             foreach (var image in createUpdateProductViewModel.Images)
             {
                 await using var stream = image.OpenReadStream();
-                var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName, Constants.ProductImagesContainer,
+                var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName,
+                    image.ContentType,
+                    Constants.ProductImagesBucket,
                     cancellationToken);
                 product.Images?.Add(new Image { Url = imageUrl });
             }
         }
 
         productsRepository.UpdateProduct(product, cancellationToken);
-        await unitOfWork.CommitAsync();
+        await unitOfWork.CommitAsync(cancellationToken);
 
         foreach (var imageUrl in createUpdateProductViewModel.ImagesToRemoveUrls ?? [])
         {

@@ -9,7 +9,7 @@
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver_db
     environment:
-      SA_PASSWORD: "1a2b3c4d@#$"
+      MSSQL_SA_PASSWORD: "1a2b3c4d@#$"
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
@@ -24,17 +24,19 @@
     volumes:
       - redis_data:/data
   
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: azurite
+  minio:
+    image: minio/minio:latest
+    container_name: minio_storage
+    environment:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
     ports:
-      - "10000:10000" # Blob storage
-      - "10001:10001" # Queue storage
-      - "10002:10002" # Table storage
-    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose --location /data"
+      - "9000:9000"
+    command: server /data
     volumes:
-      - azurite_data:/data
+      - minio_data:/data
+
 volumes:
   sqlserver_data:
   redis_data:
-  azurite_data:
+  minio_data:

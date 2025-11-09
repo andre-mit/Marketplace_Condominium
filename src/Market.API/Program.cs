@@ -1,9 +1,10 @@
-using Azure.Storage.Blobs;
+using Amazon.S3;
 using Market.API.Data;
 using Market.API.Data.Configurations;
 using Market.API.Data.Repositories;
 using Market.API.Hubs;
 using Market.API.Services;
+using Market.API.SettingsModels;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -29,18 +30,51 @@ builder.Services.AddAuthentication(x =>
         ValidateIssuer = false,
         ValidateAudience = false
     };
+    
+    x.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/hubs/chatHub")))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
+    var configuredOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyHeader()
-            .AllowAnyMethod()
-            .SetIsOriginAllowed(_ => true)
-            .AllowCredentials();
+              .AllowAnyMethod()
+              .AllowCredentials();
+
+        if (builder.Environment.IsDevelopment())
+        {
+            // Allow any origin in development but keep AllowCredentials enabled by using SetIsOriginAllowed
+            policy.SetIsOriginAllowed(_ => true);
+        }
+        else if (configuredOrigins is { Length: > 0 })
+        {
+            policy.WithOrigins(configuredOrigins);
+        }
+        else
+        {
+            // Fallback to allowing any origin (unsafe) if nothing configured
+            policy.SetIsOriginAllowed(_ => true);
+        }
     });
 });
 
@@ -77,14 +111,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Ensure CORS runs early in the pipeline so preflight requests and SignalR negotiate
+// endpoint return the correct Access-Control-Allow-* headers.
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowAll");
 
 app.MapControllers();
 
-app.MapHub<ChatHub>("/chat");
+app.MapHub<ChatHub>("/hubs/chatHub");
 
 app.Run();
 return;
@@ -103,8 +140,7 @@ static void AddServices(WebApplicationBuilder builder)
 
     builder.Services.AddSingleton<IUploadFileService, UploadFileService>();
 
-    builder.Services.AddTransient<BlobServiceClient>(_ =>
-        new BlobServiceClient(builder.Configuration.GetConnectionString("BlobStorageConnection")!));
+    AddS3UploadFileService(builder);
 
     builder.Services.AddHostedService<OrphanedItemsProcessorService>();
 }
@@ -169,6 +205,26 @@ static void AddDataServices(WebApplicationBuilder builder)
         var redisConnectionString = configuration.GetConnectionString("RedisConnection")!;
         return StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString);
     });
+}
+
+static void AddS3UploadFileService(WebApplicationBuilder builder)
+{
+    builder.Services.Configure<S3Config>(
+        builder.Configuration.GetSection("S3Config"));
+
+    var s3Config = new AmazonS3Config
+    {
+        ServiceURL = builder.Configuration["S3Config:ServiceUrl"],
+        ForcePathStyle = true,
+    };
+
+    var s3Client = new AmazonS3Client(
+        builder.Configuration["S3Config:AccessKey"],
+        builder.Configuration["S3Config:SecretKey"],
+        s3Config
+    );
+
+    builder.Services.AddSingleton<IAmazonS3>(s3Client);
 }
 
 #endregion
