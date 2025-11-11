@@ -112,6 +112,9 @@ namespace Market.API.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Categories")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte>("Condition")
                         .HasColumnType("tinyint");
 
@@ -167,6 +170,9 @@ namespace Market.API.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsSellerRated")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Review")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -174,6 +180,9 @@ namespace Market.API.Data.Migrations
 
                     b.Property<byte>("Score")
                         .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("TransactionId", "RaterId", "RatedId");
 

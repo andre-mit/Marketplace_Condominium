@@ -14,6 +14,8 @@ public class Product
     public ProductCondition Condition { get; set; }
 
     public bool IsAvailable { get; set; } = true;
+    
+    public string[]? Categories { get; set; }
 
     public required Guid OwnerId { get; set; }
     public User? Owner { get; set; }
