@@ -49,7 +49,7 @@ public class AuthController(ILogger<AuthController> logger, IUsersRepository use
                 return Conflict("A user with the given email or CPF already exists.");
 
             var password = authService.HashPass(model.Password);
-            var user = new Domain.Entities.User
+            var user = new User
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,

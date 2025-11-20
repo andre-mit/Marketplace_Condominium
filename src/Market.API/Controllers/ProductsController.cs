@@ -22,12 +22,12 @@ public class ProductsController(
     {
         try
         {
-            var (products, total) = await productsRepository.GetAvailableProductsAsync(page, 10, cancellationToken);
-            Response.Headers.Append("X-Total-Count", total.ToString());
+            var response = await productsRepository.GetAvailableProductsAsync(page, 10, cancellationToken);
+            Response.Headers.Append("X-Total-Count", response.TotalCount.ToString());
 
-            logger.LogDebug("Fetched {Count} products", products.Count);
+            logger.LogDebug("Fetched {Count} products", response.TotalCount);
 
-            return Ok(products);
+            return Ok(response.Items);
         }
         catch (Exception ex)
         {

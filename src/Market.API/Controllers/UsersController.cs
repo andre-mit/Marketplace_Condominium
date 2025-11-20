@@ -15,7 +15,7 @@ public class UsersController(
     ILogger<UsersController> logger,
     IUsersRepository usersRepository,
     ITransactionRepository transactionRepository,
-    IAuthService authService)
+    IUserService userService)
     : ControllerBase
 {
     [HttpGet("me")]
@@ -31,7 +31,7 @@ public class UsersController(
     }
 
     [HttpPut("me")]
-    public IActionResult UpdateMe(UpdateUserPasswordViewModel model)
+    public async Task<IActionResult> UpdateMe(UpdateUserPasswordViewModel model, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -43,35 +43,19 @@ public class UsersController(
 
             var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var guid))
+            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized("Invalid user ID");
 
-            var user = usersRepository.GetById(guid);
-            if (user == null)
-                return NotFound("User not found");
-
-            user.PasswordHash = authService.HashPass(model.Password);
-
-            usersRepository.Update(user);
-
-            return NoContent();
+            if (await userService.UpdateUserPasswordAsync(userIdGuid, model.Password, cancellationToken))
+                return NoContent();
+            
+            return BadRequest("User not found");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating user password");
             return StatusCode(500, "Internal server error");
         }
-    }
-
-    [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
-    public IActionResult GetById(Guid id)
-    {
-        var user = usersRepository.GetById(id);
-        if (user == null)
-            return NotFound("User not found");
-
-        return Ok(user);
     }
 
     [HttpGet("{id:guid}/ratings")]
@@ -88,6 +72,4 @@ public class UsersController(
             return StatusCode(500, "Internal server error");
         }
     }
-    
-    
 }

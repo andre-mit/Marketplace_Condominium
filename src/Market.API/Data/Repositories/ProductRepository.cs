@@ -1,12 +1,11 @@
-using Market.Domain.Entities;
-using Market.Domain.Repositories;
+using Market.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Market.API.Data.Repositories;
 
 public class ProductRepository(ApplicationDbContext context) : IProductsRepository
 {
-    public async Task<(List<Product> products, int total)> GetAllProductsAsync(int page, int pageSize,
+    public async Task<PaginatedList<Product>> GetAllProductsAsync(int page, int pageSize,
         CancellationToken cancellationToken = default)
     {
         var query = context.Products.Where(p => p.IsAvailable).AsQueryable();
@@ -21,10 +20,10 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return (products, total);
+        return new PaginatedList<Product>(products, total);
     }
 
-    public async Task<(List<Product> products, int total)> GetAvailableProductsAsync(int page, int pageSize,
+    public async Task<PaginatedList<Product>> GetAvailableProductsAsync(int page, int pageSize,
         CancellationToken cancellationToken = default)
     {
         var query = context.Products.Where(p => p.IsAvailable).AsQueryable();
@@ -39,7 +38,7 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return (products, total);
+        return new PaginatedList<Product>(products, total);
     }
 
     public async Task<Product?> GetProductByIdAsync(int productId, CancellationToken cancellationToken = default)

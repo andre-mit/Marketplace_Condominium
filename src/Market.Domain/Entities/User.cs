@@ -23,6 +23,8 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? BannedUntil { get; set; } = null;
+
     public List<Role>? Roles { get; set; }
 
     public List<Product>? Products { get; set; }

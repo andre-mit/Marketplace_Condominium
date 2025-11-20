@@ -8,6 +8,7 @@ using Market.API.SettingsModels;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +31,7 @@ builder.Services.AddAuthentication(x =>
         ValidateIssuer = false,
         ValidateAudience = false
     };
-    
+
     x.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -58,8 +59,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowCredentials();
 
         if (builder.Environment.IsDevelopment())
         {
@@ -89,6 +90,7 @@ builder.Services.AddSwaggerGen();
 AddDataServices(builder);
 AddServices(builder);
 AddRepositories(builder.Services);
+AddResendEmailService(builder);
 
 builder.Services.AddScoped<IEntityTypeConfiguration<User>, UserConfiguration>();
 
@@ -143,6 +145,17 @@ static void AddServices(WebApplicationBuilder builder)
     AddS3UploadFileService(builder);
 
     builder.Services.AddHostedService<OrphanedItemsProcessorService>();
+    builder.Services.AddHostedService<UserVerificationService>();
+
+    builder.Services.AddHttpClient("UserConfirmationApi", client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["UserConfirmationApi:BaseUrl"]!);
+
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+        client.DefaultRequestHeaders.Add("Authorization",
+            "Bearer " + builder.Configuration["UserConfirmationApi:ApiKey"]);
+        client.Timeout = TimeSpan.FromSeconds(builder.Configuration.GetValue("UserConfirmationApi:TimeoutSeconds", 30));
+    });
 }
 
 static void AddRepositories(IServiceCollection services)
@@ -225,6 +238,31 @@ static void AddS3UploadFileService(WebApplicationBuilder builder)
     );
 
     builder.Services.AddSingleton<IAmazonS3>(s3Client);
+}
+
+static void AddResendEmailService(WebApplicationBuilder builder)
+{
+    builder.Services.AddOptions();
+    builder.Services.AddHttpClient<ResendClient>();
+    builder.Services.Configure<ResendClientOptions>(r =>
+    {
+        r.ApiToken = Environment.GetEnvironmentVariable("RESEND_API_TOKEN")
+                     ?? builder.Configuration["Resend:ApiToken"]
+                     ?? throw new InvalidOperationException("Resend API token is not configured.");
+    });
+
+    var emailOptionsSection = builder.Configuration.GetSection("EmailOptions");
+    var emailOptions = emailOptionsSection.Get<EmailOptions>();
+    if (emailOptions == null)
+    {
+        throw new InvalidOperationException("EmailOptions section is not configured properly.");
+    }
+    
+    builder.Services.AddSingleton<EmailOptions>(e => emailOptions);
+    
+    builder.Services.AddTransient<IResend, ResendClient>();
+    
+    builder.Services.AddScoped<IEmailService, EmailService>();
 }
 
 #endregion

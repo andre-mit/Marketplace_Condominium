@@ -13,6 +13,8 @@ public class ListUserViewModel
     public required DateOnly Birth { get; set; }
     public required string Unit { get; set; }
     public required string Tower { get; set; }
+    
+    public required List<Product> Products { get; set; }
 
     public static implicit operator ListUserViewModel(User user) => ParseFromUser(user);
 
@@ -24,6 +26,7 @@ public class ListUserViewModel
         Email = user.Email,
         Birth = user.Birth,
         Unit = user.Unit,
-        Tower = user.Tower
+        Tower = user.Tower,
+        Products = user.Products?.ToList() ?? []
     };
 }
