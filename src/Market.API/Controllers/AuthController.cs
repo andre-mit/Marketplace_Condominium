@@ -1,3 +1,4 @@
+using System.Data;
 using Market.API.Services.Interfaces;
 using Market.Domain.Entities;
 using Market.Domain.Repositories;
@@ -9,7 +10,8 @@ namespace Market.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ILogger<AuthController> logger, IUsersRepository usersRepository, IAuthService authService) : ControllerBase
+public class AuthController(ILogger<AuthController> logger, IAuthService authService, IUserService userService)
+    : ControllerBase
 {
     [HttpPost("login")]
     public IActionResult GetToken([FromBody] LoginRequestViewModel model)
@@ -36,35 +38,25 @@ public class AuthController(ILogger<AuthController> logger, IUsersRepository use
             return BadRequest(ex.Message);
         }
     }
-    
+
     [HttpPost("register")]
-    public IActionResult CreateUser(CreateUserViewModel model)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> CreateUser(CreateUserViewModel<IFormFile> model)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (usersRepository.UserAlreadyExists(model.Email, model.CPF))
-                return Conflict("A user with the given email or CPF already exists.");
+            var user = await userService.CreateUserAsync(model);
 
-            var password = authService.HashPass(model.Password);
-            var user = new User
-            {
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                Cpf = model.CPF,
-                Email = model.Email,
-                PasswordHash = password,
-                Birth = model.Birth,
-                Unit = model.Unit,
-                Tower = model.Tower
-            };
-
-            usersRepository.Add(user);
-
-            ListUserViewModel createdUser = user;
-            return Created("users/me", createdUser);
+            return Created("users/me", user);
+        }
+        catch (DuplicateNameException ex)
+        {
+            logger.LogWarning(ex, "Attempt to create a duplicate user with email: {Email} or CPF: {CPF}", model.Email,
+                model.CPF);
+            return Conflict("A user with the given email or CPF already exists.");
         }
         catch (Exception ex)
         {

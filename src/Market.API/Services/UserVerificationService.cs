@@ -8,46 +8,38 @@ namespace Market.API.Services;
 public class UserVerificationService : BackgroundService
 {
     private readonly HttpClient _client;
-    
-    private readonly IUsersRepository _usersRepository;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IEmailService _emailService;
+
     private readonly ILogger<UserVerificationService> _logger;
     private readonly IHubContext<AdminHub> _adminHub;
+    private readonly IServiceProvider _serviceProvider;
 
     public UserVerificationService(
         ILogger<UserVerificationService> logger,
         IHubContext<AdminHub> adminHub,
         IHttpClientFactory httpClientFactory,
-        IServiceScopeFactory serviceScopeFactory)
+        IServiceProvider serviceProvider)
     {
         _client = httpClientFactory.CreateClient("UserConfirmationApi");
-        
+
         _logger = logger;
         _adminHub = adminHub;
-        
-        using var scope = serviceScopeFactory.CreateScope();
-        _usersRepository =
-            scope.ServiceProvider.GetRequiredService<IUsersRepository>();
-        
-        _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        
-        _emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+        _serviceProvider = serviceProvider;
     }
-    
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        
-        
         _logger.LogInformation("UserVerificationService started at: {time}", DateTimeOffset.Now);
 
         var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
+            using var workServiceScope = _serviceProvider.CreateScope();
+            var usersRepository = workServiceScope.ServiceProvider.GetRequiredService<IUsersRepository>();
             try
             {
-                var usersToVerify = await _usersRepository.GetUsersByStatusAsync(
+                var usersToVerify = await usersRepository.GetUsersByStatusAsync(
                     UserVerificationStatus.Pending, stoppingToken);
 
                 foreach (var user in usersToVerify)
@@ -68,6 +60,12 @@ public class UserVerificationService : BackgroundService
     {
         var success = false;
         var count = 0;
+        
+        using var workServiceScope = _serviceProvider.CreateScope();
+        var usersRepository = workServiceScope.ServiceProvider.GetRequiredService<IUsersRepository>();
+        var unitOfWork = workServiceScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var emailService = workServiceScope.ServiceProvider.GetRequiredService<IEmailService>();
+        
         do
         {
             var jsonData = JsonConvert.SerializeObject(new UserVerificationRequest(name, cpf));
@@ -84,13 +82,14 @@ public class UserVerificationService : BackgroundService
                 if (isVerified)
                 {
                     _logger.LogInformation("User {Name} with CPF {Cpf} verified successfully", name, cpf);
-                    await _usersRepository.UpdateStatusAsync(userId, UserVerificationStatus.Verified, cancellationToken);
+                    await usersRepository.UpdateStatusAsync(userId, UserVerificationStatus.Verified,
+                        cancellationToken);
                 }
                 else
                 {
                     _logger.LogWarning("User {Name} with CPF {Cpf} verification failed", name, cpf);
 
-                    await _usersRepository.UpdateStatusAsync(userId, UserVerificationStatus.PendingManualReview,
+                    await usersRepository.UpdateStatusAsync(userId, UserVerificationStatus.PendingManualReview,
                         cancellationToken);
                     await _adminHub.Clients.All.SendAsync("UserPendingManualReview", new { UserId = userId },
                         cancellationToken);
@@ -98,10 +97,10 @@ public class UserVerificationService : BackgroundService
 
                 try
                 {
-                    await _unitOfWork.CommitAsync(cancellationToken);
+                    await unitOfWork.CommitAsync(cancellationToken);
                     success = true;
 
-                    await _emailService.SendVerifiedNotificationEmailAsync(email, cancellationToken);
+                    await emailService.SendVerifiedNotificationEmailAsync(email, cancellationToken);
                     _logger.LogInformation("Sent user verified email to {Email}", email);
                 }
                 catch (Exception ex)

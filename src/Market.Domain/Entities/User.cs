@@ -12,6 +12,10 @@ public class User
     public required string Cpf { get; set; }
 
     public required string Email { get; set; }
+    public bool IsEmailVerified { get; set; } = false;
+    
+    public required string Phone { get; set; }
+    public bool IsPhoneVerified { get; set; } = false;
     public string? PasswordHash { get; set; }
 
     public required DateOnly Birth { get; set; }

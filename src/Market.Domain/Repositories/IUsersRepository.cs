@@ -12,6 +12,7 @@ public interface IUsersRepository
     bool UserAlreadyExists(string email, string cpf);
     User? GetByEmail(string email);
     User? GetByCPF(string cpf);
+    User? GetByEmailOrCPF(string identification);
     
     Task<List<User>> GetUsersByStatusAsync(UserVerificationStatus status, CancellationToken cancellationToken = default);
 

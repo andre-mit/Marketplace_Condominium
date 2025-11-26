@@ -188,6 +188,9 @@ static void AddDataServices(WebApplicationBuilder builder, string[] args)
                         LastName = "User",
                         Email =
                             builder.Configuration.GetValue<string>("AdminUser:Email") ?? "admin@admin.com",
+                        IsEmailVerified = true,
+                        Phone = "(11) 11111-1111",
+                        IsPhoneVerified = true,
                         Cpf = "000.000.000-00",
                         PasswordHash =
                             BCrypt.Net.BCrypt.HashPassword(

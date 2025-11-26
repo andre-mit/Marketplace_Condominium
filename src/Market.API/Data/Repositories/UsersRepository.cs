@@ -27,6 +27,11 @@ public class UsersRepository(ApplicationDbContext context) : IUsersRepository
 
     public User? GetByEmail(string email) => context.Users.Include(u => u.Roles).Include(u => u.Products).FirstOrDefault(u => u.Email == email);
     public User? GetByCPF(string cpf) => context.Users.Include(u => u.Products).FirstOrDefault(u => u.Cpf == cpf);
+    public User? GetByEmailOrCPF(string identification)
+    {
+        return context.Users.Include(u => u.Products).FirstOrDefault(u => u.Email == identification || u.Cpf == identification);
+    }
+
     public async Task<List<User>> GetUsersByStatusAsync(UserVerificationStatus status, CancellationToken cancellationToken = default)
     {
         return await context.Users
