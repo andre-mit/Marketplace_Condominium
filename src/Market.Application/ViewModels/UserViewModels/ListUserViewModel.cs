@@ -14,6 +14,8 @@ public class ListUserViewModel
     public required string Unit { get; set; }
     public required string Tower { get; set; }
     
+    public string? AvatarUrl { get; set; } = null;
+    
     public required List<Product> Products { get; set; }
 
     public static implicit operator ListUserViewModel(User user) => ParseFromUser(user);
@@ -27,6 +29,7 @@ public class ListUserViewModel
         Birth = user.Birth,
         Unit = user.Unit,
         Tower = user.Tower,
+        AvatarUrl = user.AvatarUrl,
         Products = user.Products?.ToList() ?? []
     };
 }

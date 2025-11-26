@@ -24,6 +24,8 @@ public class User
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? BannedUntil { get; set; } = null;
+    
+    public string? AvatarUrl { get; set; } = null;
 
     public List<Role>? Roles { get; set; }
 

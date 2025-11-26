@@ -87,7 +87,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddSwaggerGen();
 
-AddDataServices(builder);
+AddDataServices(builder, args);
 AddServices(builder);
 AddRepositories(builder.Services);
 AddResendEmailService(builder);
@@ -166,12 +166,14 @@ static void AddRepositories(IServiceCollection services)
     services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 }
 
-static void AddDataServices(WebApplicationBuilder builder)
+static void AddDataServices(WebApplicationBuilder builder, string[] args)
 {
     builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
     {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"))
-            .UseAsyncSeeding(async (context, _, ct) =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerConnection"));
+        var shouldSeed = args.Contains("--seed-data");
+        if (shouldSeed)
+            options.UseAsyncSeeding(async (context, _, ct) =>
             {
                 var hasUserData = await context.Set<User>().AnyAsync(x => true, cancellationToken: ct);
                 if (!hasUserData)
@@ -257,11 +259,11 @@ static void AddResendEmailService(WebApplicationBuilder builder)
     {
         throw new InvalidOperationException("EmailOptions section is not configured properly.");
     }
-    
+
     builder.Services.AddSingleton<EmailOptions>(e => emailOptions);
-    
+
     builder.Services.AddTransient<IResend, ResendClient>();
-    
+
     builder.Services.AddScoped<IEmailService, EmailService>();
 }
 

@@ -16,10 +16,10 @@ public class AuthController(ILogger<AuthController> logger, IUsersRepository use
     {
         try
         {
-            var user = authService.Authenticate(model.Email, model.Password);
+            var user = authService.Authenticate(model.Identification, model.Password);
             if (user == null)
             {
-                logger.LogWarning("Failed login attempt for email: {Email}", model.Email);
+                logger.LogWarning("Failed login attempt for email: {Email}", model.Identification);
                 return Unauthorized("Invalid email or password");
             }
 
