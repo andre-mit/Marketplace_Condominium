@@ -10,7 +10,8 @@ WORKDIR /src
 COPY ["src/Market.API/Market.API.csproj", "src/Market.API/"]
 RUN dotnet restore "src/Market.API/Market.API.csproj"|| \
     dotnet restore "src/Market.API/Market.API.csproj"|| \
-    dotnet restore "src/Market.API/Market.API.csproj"|| \
+    dotnet restore "src/Market.API/Market.API.csproj" 
+    
 COPY . .
 WORKDIR "/src/src/Market.API"
 RUN dotnet build "Market.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
