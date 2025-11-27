@@ -1,4 +1,5 @@
-﻿services:
+﻿version: '3.8'
+services:
   market.api:
     image: market.api
     build:
