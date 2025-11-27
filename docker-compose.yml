@@ -1,7 +1,19 @@
 ﻿version: '3.8'
 services:
   market.api:
-    image: market.api
     build:
       context: .
       dockerfile: src/Market.API/Dockerfile
+    image: market.api:latest
+    ports:
+      - "7031:80"
+    depends_on:
+      - users.api
+
+  users.api:
+    build:
+      context: .
+      dockerfile: src/UsersApi/Dockerfile
+    image: users.api:latest
+    ports:
+      - "8081:80"
