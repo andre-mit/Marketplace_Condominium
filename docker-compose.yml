@@ -5,9 +5,3 @@ services:
     build:
       context: .
       dockerfile: src/Market.API/Dockerfile
-      
-  users.api:
-    image: users.api
-    build:
-      context: .
-      dockerfile: src/UsersApi/Dockerfile
