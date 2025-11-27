@@ -7,8 +7,11 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["src/MarktplaceCondo.sln", "src"]
+COPY ["src/Market.Domain/Market.Domain.csproj", "src/Market.Domain/"]
+COPY ["src/Market.SharedApplication/Market.SharedApplication.csproj", "src/Market.SharedApplication/"]
 COPY ["src/Market.API/Market.API.csproj", "src/Market.API/"]
-RUN dotnet restore "src/Market.API/Market.API.csproj"
+RUN dotnet restore "MarktplaceCondo.sln"
     
 COPY . .
 WORKDIR "/src/Market.API"
