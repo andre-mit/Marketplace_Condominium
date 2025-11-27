@@ -5,6 +5,7 @@ using Market.API.Data.Repositories;
 using Market.API.Hubs;
 using Market.API.Services;
 using Market.API.SettingsModels;
+using Market.Domain.Enums;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -111,7 +112,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 // Ensure CORS runs early in the pipeline so preflight requests and SignalR negotiate
 // endpoint return the correct Access-Control-Allow-* headers.
@@ -138,6 +139,7 @@ static void AddServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
     builder.Services.AddTransient<IAuthService, AuthService>();
+    builder.Services.AddTransient<IUserService, UserService>();
     builder.Services.AddTransient<IProductService, ProductService>();
 
     builder.Services.AddSingleton<IUploadFileService, UploadFileService>();
@@ -201,7 +203,8 @@ static void AddDataServices(WebApplicationBuilder builder, string[] args)
                         Tower = "0",
                         CreatedAt = new DateTime(2025, 1, 1),
                         UpdatedAt = new DateTime(2025, 1, 1),
-                        Roles = [role]
+                        Roles = [role],
+                        VerificationStatus = UserVerificationStatus.Verified
                     };
 
                     context.Set<User>().Add(user);

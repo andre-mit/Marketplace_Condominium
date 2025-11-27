@@ -27,7 +27,7 @@ public class AuthService(IConfiguration configuration, IUsersRepository usersRep
     
     public User? Authenticate(string email, string password)
     {
-        var user = usersRepository.GetByEmail(email);
+        var user = usersRepository.GetByEmailOrCPF(email);
         if (user == null || !Verify(password, user.PasswordHash))
             return null;
 
