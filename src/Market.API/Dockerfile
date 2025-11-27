@@ -11,7 +11,7 @@ COPY ["src/Market.API/Market.API.csproj", "src/Market.API/"]
 RUN dotnet restore "Market.API/Market.API.csproj"
     
 COPY . .
-WORKDIR "/src/src/Market.API"
+WORKDIR "/src/Market.API"
 RUN dotnet build "Market.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
