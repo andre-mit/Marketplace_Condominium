@@ -17,6 +17,9 @@ public class User
     public required string Phone { get; set; }
     public bool IsPhoneVerified { get; set; } = false;
     public string? PasswordHash { get; set; }
+    
+    public string? ResetPasswordCode { get; set; }
+    public DateTime? ResetPasswordCodeExpiresAt { get; set; }
 
     public required DateOnly Birth { get; set; }
     public required string Unit { get; set; }

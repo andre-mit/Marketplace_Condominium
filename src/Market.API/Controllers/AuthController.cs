@@ -64,4 +64,37 @@ public class AuthController(ILogger<AuthController> logger, IAuthService authSer
             return BadRequest("An error occurred while creating the user.");
         }
     }
+    
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromQuery] string email, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await authService.ForgotPasswordAsync(email, cancellationToken);
+            return Ok("Password reset instructions have been sent to your email.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error in forgot password for email: {Email}", email);
+            return BadRequest("An error occurred while processing your request.");
+        }
+    }
+    
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var success = await authService.ResetPasswordAsync(model.Email, model.Code, model.Password, cancellationToken);
+            if (!success)
+                return BadRequest("Invalid reset code or email.");
+
+            return Ok("Password has been reset successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error in reset password for email: {Email}", model.Email);
+            return BadRequest("An error occurred while processing your request.");
+        }
+    }
 }

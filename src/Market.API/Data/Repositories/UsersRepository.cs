@@ -64,4 +64,34 @@ public class UsersRepository(ApplicationDbContext context) : IUsersRepository
     {
         context.Users.Remove(user);
     }
+
+    public bool AddResetPasswordCode(string email, string code)
+    {
+        var user = context.Users.FirstOrDefault(u => u.Email == email);
+        
+        if (user == null) return false;
+        
+        user.ResetPasswordCode = code;
+        user.ResetPasswordCodeExpiresAt = DateTime.UtcNow.AddHours(1);
+        context.Users.Update(user);
+        
+        return true;
+    }
+    
+    public bool ResetPassword(string email, string code, string newPasswordHash)
+    {
+        var user = context.Users.FirstOrDefault(u => u.Email == email);
+        
+        if (user == null) return false;
+        
+        if (user.ResetPasswordCode != code || user.ResetPasswordCodeExpiresAt < DateTime.UtcNow)
+            return false;
+        
+        user.PasswordHash = newPasswordHash;
+        user.ResetPasswordCode = null;
+        user.ResetPasswordCodeExpiresAt = null;
+        context.Users.Update(user);
+        
+        return true;
+    }
 }

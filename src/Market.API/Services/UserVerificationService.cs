@@ -5,37 +5,24 @@ using Newtonsoft.Json;
 
 namespace Market.API.Services;
 
-public class UserVerificationService : BackgroundService
+public class UserVerificationService(
+    ILogger<UserVerificationService> logger,
+    IHubContext<AdminHub> adminHub,
+    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider)
+    : BackgroundService
 {
-    private readonly HttpClient _client;
-
-    private readonly ILogger<UserVerificationService> _logger;
-    private readonly IHubContext<AdminHub> _adminHub;
-    private readonly IServiceProvider _serviceProvider;
-
-    public UserVerificationService(
-        ILogger<UserVerificationService> logger,
-        IHubContext<AdminHub> adminHub,
-        IHttpClientFactory httpClientFactory,
-        IServiceProvider serviceProvider)
-    {
-        _client = httpClientFactory.CreateClient("UserConfirmationApi");
-
-        _logger = logger;
-        _adminHub = adminHub;
-
-        _serviceProvider = serviceProvider;
-    }
+    private readonly HttpClient _client = httpClientFactory.CreateClient("UserConfirmationApi");
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("UserVerificationService started at: {time}", DateTimeOffset.Now);
+        logger.LogInformation("UserVerificationService started at: {time}", DateTimeOffset.Now);
 
         var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            using var workServiceScope = _serviceProvider.CreateScope();
+            using var workServiceScope = serviceProvider.CreateScope();
             var usersRepository = workServiceScope.ServiceProvider.GetRequiredService<IUsersRepository>();
             try
             {
@@ -44,31 +31,32 @@ public class UserVerificationService : BackgroundService
 
                 foreach (var user in usersToVerify)
                 {
-                    await VerifyUserAsync(user.Id, user.FullName, user.Cpf, user.Email, stoppingToken);
+                    await VerifyUserAsync(user, stoppingToken);
                     await Task.Delay(500, stoppingToken);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in UserVerificationService");
+                logger.LogError(ex, "Error in UserVerificationService");
             }
         }
     }
 
-    private async Task VerifyUserAsync(Guid userId, string name, string cpf, string email,
+    private async Task VerifyUserAsync(User user,
         CancellationToken cancellationToken = default)
     {
         var success = false;
         var count = 0;
-        
-        using var workServiceScope = _serviceProvider.CreateScope();
+
+        using var workServiceScope = serviceProvider.CreateScope();
         var usersRepository = workServiceScope.ServiceProvider.GetRequiredService<IUsersRepository>();
         var unitOfWork = workServiceScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var emailService = workServiceScope.ServiceProvider.GetRequiredService<IEmailService>();
-        
+
         do
         {
-            var jsonData = JsonConvert.SerializeObject(new UserVerificationRequest(name, cpf));
+            var jsonData = JsonConvert.SerializeObject(new UserVerificationRequest(user.FullName, user.Cpf, user.Birth,
+                user.Email, user.Phone, user.Unit, user.Tower));
 
             var jsonDataContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
@@ -76,49 +64,50 @@ public class UserVerificationService : BackgroundService
 
             if (response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                var isVerified = JsonConvert.DeserializeObject<bool>(responseContent);
-
-                if (isVerified)
-                {
-                    _logger.LogInformation("User {Name} with CPF {Cpf} verified successfully", name, cpf);
-                    await usersRepository.UpdateStatusAsync(userId, UserVerificationStatus.Verified,
-                        cancellationToken);
-                }
-                else
-                {
-                    _logger.LogWarning("User {Name} with CPF {Cpf} verification failed", name, cpf);
-
-                    await usersRepository.UpdateStatusAsync(userId, UserVerificationStatus.PendingManualReview,
-                        cancellationToken);
-                    await _adminHub.Clients.All.SendAsync("UserPendingManualReview", new { UserId = userId },
-                        cancellationToken);
-                }
+                logger.LogInformation("User {Name} with CPF {Cpf} verified successfully", user.FullName, user.Cpf);
+                await usersRepository.UpdateStatusAsync(user.Id, UserVerificationStatus.Verified,
+                    cancellationToken);
 
                 try
                 {
                     await unitOfWork.CommitAsync(cancellationToken);
                     success = true;
 
-                    await emailService.SendVerifiedNotificationEmailAsync(email, cancellationToken);
-                    _logger.LogInformation("Sent user verified email to {Email}", email);
+                    await emailService.SendVerifiedNotificationEmailAsync(user.Email, cancellationToken);
+                    logger.LogInformation("Sent user verified email to {Email}", user.Email);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error committing user verification status for user {Name} with CPF {Cpf}",
-                        name,
-                        cpf);
+                    logger.LogError(ex, "Error committing user verification status for user {Name} with CPF {Cpf}",
+                        user.FullName, user.Cpf);
                 }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                logger.LogWarning("User {Name} with CPF {Cpf} verification failed", user.FullName, user.Cpf);
+
+                await usersRepository.UpdateStatusAsync(user.Id, UserVerificationStatus.PendingManualReview,
+                    cancellationToken);
+                await adminHub.Clients.All.SendAsync("UserPendingManualReview", new { UserId = user.Id },
+                    cancellationToken);
+
+                success = true;
             }
             else
             {
-                _logger.LogError("Error verifying user {Name} with CPF {Cpf}: {StatusCode}", name, cpf,
-                    response.StatusCode);
+                logger.LogError("User {Name} with CPF {Cpf} verification failed", user.FullName, user.Cpf);
             }
 
             count++;
         } while (!success && count < 3 && !cancellationToken.IsCancellationRequested);
     }
 
-    private record UserVerificationRequest(string Name, string Cpf);
+    private record UserVerificationRequest(
+        string Name,
+        string Cpf,
+        DateOnly Birth,
+        string Email,
+        string Phone,
+        string Unit,
+        string Tower);
 }

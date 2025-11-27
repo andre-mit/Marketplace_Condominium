@@ -5,7 +5,11 @@ using static BCrypt.Net.BCrypt;
 
 namespace Market.API.Services;
 
-public class AuthService(IConfiguration configuration, IUsersRepository usersRepository) : IAuthService
+public class AuthService(
+    IConfiguration configuration,
+    IUsersRepository usersRepository,
+    IEmailService emailService,
+    IUnitOfWork unitOfWork) : IAuthService
 {
     public string CreateToken(User user)
     {
@@ -24,7 +28,7 @@ public class AuthService(IConfiguration configuration, IUsersRepository usersRep
         var token = handler.CreateToken(tokenDescriptor);
         return handler.WriteToken(token);
     }
-    
+
     public User? Authenticate(string email, string password)
     {
         var user = usersRepository.GetByEmailOrCPF(email);
@@ -32,25 +36,54 @@ public class AuthService(IConfiguration configuration, IUsersRepository usersRep
             return null;
 
         user.PasswordHash = null;
-        
+
         return user;
     }
-    
+
     public string HashPass(string password) => HashPassword(password);
+
+    public async Task<bool> ForgotPasswordAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var user = usersRepository.GetByEmailOrCPF(email);
+        if (user == null)
+            return false;
+
+        var code = new Random().Next(100000, 999999).ToString();
+        var added = usersRepository.AddResetPasswordCode(email, code);
+        if (!added)
+            return false;
+
+        await unitOfWork.CommitAsync(cancellationToken);
+        
+        await emailService.SendPasswordResetEmailAsync(email, code, cancellationToken);
+
+        return true;
+    }
     
+    public async Task<bool> ResetPasswordAsync(string email, string code, string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var newHashedPassword = HashPassword(newPassword);
+        var success = usersRepository.ResetPassword(email, code, newHashedPassword);
+        
+        if (!success)
+            return false;
+        
+        await unitOfWork.CommitAsync(cancellationToken);
+
+        return true;
+    }
+
     private static ClaimsIdentity GenerateClaims(User user)
     {
-        var claims = 
-        new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.FirstName),
-        });
-        
-        user.Roles?.ForEach(role =>
-        {
-            claims.AddClaim(new Claim(ClaimTypes.Role, role.Name));
-        });
+        var claims =
+            new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.FirstName),
+            });
+
+        user.Roles?.ForEach(role => { claims.AddClaim(new Claim(ClaimTypes.Role, role.Name)); });
 
         return claims;
     }

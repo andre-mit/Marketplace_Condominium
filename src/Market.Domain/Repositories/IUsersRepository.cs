@@ -21,4 +21,7 @@ public interface IUsersRepository
     void Add(User user);
     void Update(User user);
     void Delete(User user);
+
+    bool AddResetPasswordCode(string email, string code);
+    bool ResetPassword(string email, string code, string newPasswordHash);
 }

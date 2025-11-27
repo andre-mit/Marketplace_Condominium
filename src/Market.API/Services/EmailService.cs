@@ -4,7 +4,7 @@ using Resend;
 
 namespace Market.API.Services;
 
-public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOptions _emailOptions) : IEmailService
+public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOptions emailOptions) : IEmailService
 {
 
     public async Task SendVerificationEmailAsync(string toEmail, string verificationCode,
@@ -14,8 +14,8 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = $"<p>Your verification code is: <strong>{verificationCode}</strong></p>",
+                From = emailOptions.From,
+                HtmlBody = $"<p>Use o código <b>${verificationCode}</b> para verificar seu email</p>",
                 Subject = "Verificação de Email"
             };
 
@@ -29,16 +29,16 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         }
     }
     
-    public async Task SendPasswordResetEmailAsync(string toEmail, string resetLink,
+    public async Task SendPasswordResetEmailAsync(string toEmail, string code,
         CancellationToken cancellationToken = default)
     {
         try
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = $"<p>Click <a href=\"{resetLink}\">here</a> to reset your password.</p>",
-                Subject = "Password Reset"
+                From = emailOptions.From,
+                HtmlBody = $"<p>Use o código <b>${code}</b> para restaurar sua senha</p>",
+                Subject = "Esqueci minha senha"
             };
 
             email.To.Add(toEmail);
@@ -58,9 +58,9 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = "<p>Your account has been successfully verified.</p>",
-                Subject = "Account Verified"
+                From = emailOptions.From,
+                HtmlBody = "<p>Sua conta foi verificada com sucesso. Você ja pode acessar o Marketplace do seu condomínio</p>",
+                Subject = "Conta verificada"
             };
 
             email.To.Add(toEmail);
@@ -80,9 +80,9 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = "<p>Your account is pending manual review. We will notify you once the review is complete.</p>",
-                Subject = "Account Pending Manual Review"
+                From = emailOptions.From,
+                HtmlBody = "<p>Sua conta está pendente de revisão manual. Pode ser que entremos em contato via email ou telefone para confirmar informações.</p>",
+                Subject = "Conta pendente de revisão manual"
             };
 
             email.To.Add(toEmail);
@@ -102,9 +102,9 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = "<p>Welcome to our platform! We're excited to have you on board.</p>",
-                Subject = "Welcome to Our Platform"
+                From = emailOptions.From,
+                HtmlBody = "<p>Bem-vindo à nossa plataforma! Estamos felizes em tê-lo conosco.</p>",
+                Subject = "Bem-vindo à nossa plataforma de Marketplace"
             };
 
             email.To.Add(toEmail);
@@ -124,9 +124,9 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = "<p>We're sorry to see you go. If you have any feedback, please let us know.</p>",
-                Subject = "Goodbye from Our Platform"
+                From = emailOptions.From,
+                HtmlBody = "<p>Lamentamos vê-lo partir. Se mudar de ideia, estaremos aqui para recebê-lo de volta.</p>",
+                Subject = "Sentimos sua falta na nossa plataforma de Marketplace"
             };
 
             email.To.Add(toEmail);
@@ -146,9 +146,9 @@ public class EmailService(ILogger<EmailService> logger, IResend resend, EmailOpt
         {
             var email = new EmailMessage
             {
-                From = _emailOptions.From,
-                HtmlBody = $"<p>Your account has been banned until {dateUntil:D}. Please contact support for more information.</p>",
-                Subject = "Account Banned Notification"
+                From = emailOptions.From,
+                HtmlBody = $"<p>Sua conta foi banida até {dateUntil:dd/MM/yyyy}. Durante esse período, você não poderá acessar nossos serviços.</p>",
+                Subject = "Conta banida na nossa plataforma de Marketplace"
             };
 
             email.To.Add(toEmail);
