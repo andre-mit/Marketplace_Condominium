@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'MarktplaceCondo.sln'
       - 'src/Market.API/Dockerfile'
+      - '.github/workflows/main.yml'
 
 jobs:
   quality-check:
@@ -39,5 +40,4 @@ jobs:
     steps:
       - name: Call Coolify Webhook
         run: |
-          curl -f -v --request GET '${{ secrets.COOLIFY_WEBHOOK }}' \
-               --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+          curl -f -v --request GET '${{ secrets.COOLIFY_WEBHOOK }}'
