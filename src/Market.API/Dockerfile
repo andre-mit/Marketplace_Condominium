@@ -1,5 +1,4 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -7,9 +6,15 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
 COPY ["src/Market.API/Market.API.csproj", "src/Market.API/"]
+COPY ["src/Market.Domain/Market.Domain.csproj", "src/Market.Domain/"]
+COPY ["src/Market.Application/Market.SharedApplication.csproj", "src/Market.Application/"]
+
 RUN dotnet restore "src/Market.API/Market.API.csproj"
+
 COPY . .
+
 WORKDIR "/src/src/Market.API"
 RUN dotnet build "Market.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
