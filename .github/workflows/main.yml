@@ -5,7 +5,9 @@ on:
     branches: [ "master" ]
 
     paths:
-      - 'src/**'
+      - 'src/Market.API/**'
+      - 'src/Market.Application/**'
+      - 'src/Market.Domain/**'
       - 'MarktplaceCondo.sln'
       - 'src/Market.API/Dockerfile'
       - '.github/workflows/main.yml'
@@ -40,5 +42,5 @@ jobs:
     steps:
       - name: Call Coolify Webhook
         run: |
-          curl -f -v --request GET '${{ secrets.COOLIFY_URL_DEPLOY }}&force=true&sha=${{ github.sha }}' \
+          curl -f -v --request GET '${{ secrets.COOLIFY_URL_DEPLOY }}${{ secrets.COOLIFY_MARKETPLACE_API_ID }}&force=true&sha=${{ github.sha }}' \
                --header 'Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}'

@@ -1,0 +1,42 @@
+name: Deploy Users API
+
+on:
+  push:
+    branches: [ "master" ]
+
+    paths:
+      - 'src/UsersApi/**'
+      - '.github/workflows/users.yml'
+
+jobs:
+  quality-check:
+    name: Build & Test Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore MarktplaceCondo.sln
+
+      - name: Build API
+        run: dotnet build src/UsersApi/UsersApi.csproj --no-restore --configuration Release
+
+    # - name: Run Unit Tests
+    #   run: dotnet test src/Market.Tests/Market.Tests.csproj --no-build
+
+  trigger-deploy:
+    name: Trigger Coolify
+    needs: quality-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Coolify Webhook
+        run: |
+          curl -f -v --request GET '${{ secrets.COOLIFY_URL_DEPLOY }}${{ secrets.COOLIFY_USERS_API_ID }}&force=true&sha=${{ github.sha }}' \
+               --header 'Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}'
