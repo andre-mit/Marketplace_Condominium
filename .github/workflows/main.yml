@@ -1,0 +1,43 @@
+name: Deploy Market API
+
+on:
+  push:
+    branches: [ "main" ]
+
+    paths:
+      - 'src/**'
+      - 'MarktplaceCondo.sln'
+      - 'src/Market.API/Dockerfile'
+
+jobs:
+  quality-check:
+    name: Build & Test Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore Dependencies
+      run: dotnet restore MarktplaceCondo.sln
+
+    - name: Build API
+      run: dotnet build src/Market.API/Market.API.csproj --no-restore --configuration Release
+
+    # - name: Run Unit Tests
+    #   run: dotnet test src/Market.Tests/Market.Tests.csproj --no-build
+
+  trigger-deploy:
+    name: Trigger Coolify
+    needs: quality-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Coolify Webhook
+        run: |
+          curl --request GET '${{ secrets.COOLIFY_WEBHOOK }}' \
+               --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
