@@ -13,6 +13,12 @@ namespace Market.API.Controllers;
 public class AuthController(ILogger<AuthController> logger, IAuthService authService, IUserService userService)
     : ControllerBase
 {
+    [HttpGet]
+    public IActionResult HealthCheck()
+    {
+        return Ok("Auth service is running.");
+    }
+    
     [HttpPost("login")]
     public IActionResult GetToken([FromBody] LoginRequestViewModel model)
     {
