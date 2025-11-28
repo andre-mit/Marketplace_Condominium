@@ -2,7 +2,7 @@ name: Deploy Market API
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
     paths:
       - 'src/**'
