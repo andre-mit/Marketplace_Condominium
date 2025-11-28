@@ -108,8 +108,6 @@ app.UseSwaggerUI();
 
 // app.UseHttpsRedirection();
 
-// Ensure CORS runs early in the pipeline so preflight requests and SignalR negotiate
-// endpoint return the correct Access-Control-Allow-* headers.
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
