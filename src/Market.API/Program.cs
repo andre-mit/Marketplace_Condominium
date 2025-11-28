@@ -65,7 +65,6 @@ builder.Services.AddCors(options =>
 
         if (builder.Environment.IsDevelopment())
         {
-            // Allow any origin in development but keep AllowCredentials enabled by using SetIsOriginAllowed
             policy.SetIsOriginAllowed(_ => true);
         }
         else if (configuredOrigins is { Length: > 0 })
@@ -74,7 +73,6 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // Fallback to allowing any origin (unsafe) if nothing configured
             policy.SetIsOriginAllowed(_ => true);
         }
     });
