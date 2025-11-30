@@ -36,6 +36,23 @@ public class ProductsController(
         }
     }
     
+    [HttpGet("categorized")]
+    public async Task<IActionResult> GetCategorizedProducts([FromQuery] int limitByCategory = 5,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var categorizedProducts = await productService.ListCategorizedProductsAsync(limitByCategory, cancellationToken);
+            logger.LogDebug("Fetched categorized products with limit {LimitByCategory}", limitByCategory);
+            return Ok(categorizedProducts);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching categorized products");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
     [HttpGet("{productId:int}")]
     public async Task<IActionResult> GetProductById([FromRoute] int productId,
         CancellationToken cancellationToken = default)

@@ -4,6 +4,9 @@ namespace Market.API.Services.Interfaces;
 
 public interface IProductService
 {
+    Task<List<ListCategorizedProducts>> ListCategorizedProductsAsync(int limitByCategory,
+        CancellationToken cancellationToken = default);
+
     Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createUpdateProductViewModel,
         Guid userId, CancellationToken cancellationToken = default);
 

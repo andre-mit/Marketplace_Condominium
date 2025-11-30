@@ -9,6 +9,10 @@ public class ListUserViewModel
     public required string LastName { get; set; }
     
     public required string Email { get; set; }
+    
+    public string? Phone { get; set; } = null;
+    
+    public string? Cpf { get; set; } = null;
 
     public required DateOnly Birth { get; set; }
     public required string Unit { get; set; }
@@ -26,6 +30,8 @@ public class ListUserViewModel
         FirstName = user.FirstName,
         LastName = user.LastName,
         Email = user.Email,
+        Phone = user.Phone,
+        Cpf = user.Cpf,
         Birth = user.Birth,
         Unit = user.Unit,
         Tower = user.Tower,

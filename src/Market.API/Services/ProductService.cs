@@ -10,6 +10,37 @@ public class ProductService(
     IUploadFileService uploadFileService,
     IDistributedCache cache) : IProductService
 {
+    public async Task<List<ListCategorizedProducts>> ListCategorizedProductsAsync(int limitByCategory,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await productsRepository.GetGroupedByCategoryProductsAsync(limitByCategory, cancellationToken);
+        var categorizedProducts = from product in response
+            group product by product.Category into categoryGroup
+            select new ListCategorizedProducts
+            {
+                Id = categoryGroup.Key.Id,
+                Name = categoryGroup.Key.Name,
+                Products = categoryGroup.Select(p => new ListProductViewModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    ImageUrls = p.Images?.Select(img => img.Url)?.ToList(),
+                    Condition = p.Condition,
+                    AdvertisementTypes = p.AdvertisementTypes,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    Owner = new ListProductViewModel.UserListForProductViewModel
+                    {
+                        Name = p.Owner!.FullName,
+                        ProfileImageUrl = p.Owner!.AvatarUrl
+                    }
+                }).ToList()
+            };
+
+        return categorizedProducts.ToList();
+    }
     public async Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createUpdateProductViewModel,
         Guid userId,
         CancellationToken cancellationToken = default)

@@ -11,7 +11,9 @@ public class ListProductViewModel
 
     public required UserListForProductViewModel Owner { get; set; }
     
-    public List<string> ImageUrls { get; set; } = [];
+    public List<string>? ImageUrls { get; set; } = [];
+    
+    public ProductCondition Condition { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -21,6 +23,6 @@ public class ListProductViewModel
     public class UserListForProductViewModel
     {
         public required string Name { get; set; }
-        public required string ProfileImageUrl { get; set; }
+        public string? ProfileImageUrl { get; set; }
     }
 }

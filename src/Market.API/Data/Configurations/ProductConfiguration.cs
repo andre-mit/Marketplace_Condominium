@@ -18,17 +18,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Description)
             .HasMaxLength(1000);
 
-        builder.Property(p => p.Categories)
-            .HasConversion(
-                v => string.Join(',', v ?? Array.Empty<string>()),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries))
-            .Metadata.SetValueComparer(
-                new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<string[]>(
-                    (c1, c2) => c1.SequenceEqual(c2),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToArray()
-                ));
-
         builder.Property(p => p.UpdatedAt)
             .IsRequired(false);
 
@@ -46,6 +35,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .WithOne(cs => cs.Product)
             .HasForeignKey(cs => cs.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasOne(p => p.Category)
+            .WithMany(c => c.Products)
+            .HasForeignKey(p => p.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(p => p.Name);
     }

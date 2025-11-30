@@ -14,8 +14,6 @@ public class Product
     public ProductCondition Condition { get; set; }
 
     public bool IsAvailable { get; set; } = true;
-    
-    public string[]? Categories { get; set; }
 
     public required Guid OwnerId { get; set; }
     public User? Owner { get; set; }
@@ -29,4 +27,7 @@ public class Product
 
     public Transaction? Transaction { get; set; }
     public ICollection<ChatSession>? ChatSessions { get; set; }
+    
+    public int? CategoryId { get; set; }
+    public Category? Category { get; set; }
 }

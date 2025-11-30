@@ -72,4 +72,20 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
     {
         return await context.Products.CountAsync(cancellationToken);
     }
+
+    public async Task<List<Product>> GetGroupedByCategoryProductsAsync(int limitByCategory,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Category)
+            .Include(p => p.Owner)
+            .Where(p => p.IsAvailable)
+            .GroupBy(p => p.CategoryId)
+            .SelectMany(group =>
+                group.OrderByDescending(p => p.CreatedAt)
+                    .Take(limitByCategory));
+
+        return await query.ToListAsync(cancellationToken);
+    }
 }

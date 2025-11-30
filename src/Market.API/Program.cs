@@ -198,7 +198,22 @@ static void AddDataServices(WebApplicationBuilder builder, string[] args)
                     };
 
                     context.Set<User>().Add(user);
+                    await context.SaveChangesAsync(ct);
+                }
 
+                var hasCategoriesData = await context.Set<Category>().AnyAsync(x => true, cancellationToken: ct);
+                if (!hasCategoriesData)
+                {
+                    var categories = new List<Category>
+                    {
+                        new() { Name = "Móveis" },
+                        new() { Name = "Books" },
+                        new() { Name = "Clothing" },
+                        new() { Name = "Home & Kitchen" },
+                        new() { Name = "Sports & Outdoors" }
+                    };
+
+                    context.Set<Category>().AddRange(categories);
                     await context.SaveChangesAsync(ct);
                 }
             });
