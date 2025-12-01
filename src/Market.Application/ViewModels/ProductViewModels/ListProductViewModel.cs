@@ -1,4 +1,5 @@
 using Market.Domain.Enums;
+using Market.SharedApplication.ViewModels.CategoryViewModels;
 
 namespace Market.SharedApplication.ViewModels.ProductViewModels;
 
@@ -19,10 +20,13 @@ public class ListProductViewModel
     public DateTime? UpdatedAt { get; set; }
 
     public required TransactionType[] AdvertisementTypes { get; set; }
+    
+    public ListCategoryViewModel? Category { get; set; }
 
     public class UserListForProductViewModel
     {
         public required string Name { get; set; }
         public string? ProfileImageUrl { get; set; }
+        public byte Rating { get; set; }
     }
 }

@@ -26,6 +26,8 @@ public class User
     public required string Tower { get; set; }
 
     public UserVerificationStatus VerificationStatus { get; set; } = UserVerificationStatus.Pending;
+    
+    public byte Rating { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

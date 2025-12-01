@@ -12,4 +12,6 @@ public interface IProductsRepository
     Task DeleteProductAsync(int productId, CancellationToken cancellationToken = default);
     Task<int> GetTotalProductsCountAsync(CancellationToken cancellationToken = default);
     Task<List<Product>> GetGroupedByCategoryProductsAsync(int limitByCategory, CancellationToken cancellationToken = default);
+    Task<List<Category>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
+    Task<Product?> GetProductWithDetailsByIdAsync(int productId, CancellationToken cancellationToken = default);
 }

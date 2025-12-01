@@ -206,11 +206,12 @@ static void AddDataServices(WebApplicationBuilder builder, string[] args)
                 {
                     var categories = new List<Category>
                     {
-                        new() { Name = "Móveis" },
-                        new() { Name = "Books" },
-                        new() { Name = "Clothing" },
-                        new() { Name = "Home & Kitchen" },
-                        new() { Name = "Sports & Outdoors" }
+                        new() { Name = "Móveis", Icon = "couch" },
+                        new() { Name = "Eletrônicos", Icon = "tv" },
+                        new() { Name = "Roupas", Icon = "tshirt" },
+                        new() { Name = "Esportes", Icon = "bicycle" },
+                        new() { Name = "Livros", Icon = "book" },
+                        new() { Name = "Auto", Icon = "car" },
                     };
 
                     context.Set<Category>().AddRange(categories);

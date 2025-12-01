@@ -20,6 +20,8 @@ public class ListUserViewModel
     
     public string? AvatarUrl { get; set; } = null;
     
+    public decimal Rating { get; set; }
+    
     public required List<Product> Products { get; set; }
 
     public static implicit operator ListUserViewModel(User user) => ParseFromUser(user);
@@ -36,6 +38,7 @@ public class ListUserViewModel
         Unit = user.Unit,
         Tower = user.Tower,
         AvatarUrl = user.AvatarUrl,
+        Rating = (decimal)user.Rating / 10,
         Products = user.Products?.ToList() ?? []
     };
 }

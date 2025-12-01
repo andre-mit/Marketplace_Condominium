@@ -88,4 +88,18 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
 
         return await query.ToListAsync(cancellationToken);
     }
+
+    public async Task<List<Category>> GetAllCategoriesAsync(CancellationToken cancellationToken = default)
+    {
+        return await context.Categories.ToListAsync(cancellationToken);
+    }
+
+    public async Task<Product?> GetProductWithDetailsByIdAsync(int productId, CancellationToken cancellationToken = default)
+    {
+        return await context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Owner)
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
+    }
 }

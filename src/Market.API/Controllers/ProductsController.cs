@@ -1,5 +1,6 @@
 using Market.API.Services.Interfaces;
 using Market.Domain.Repositories;
+using Market.SharedApplication.ViewModels.CategoryViewModels;
 using Market.SharedApplication.ViewModels.ProductViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +60,7 @@ public class ProductsController(
     {
         try
         {
-            var product = await productsRepository.GetProductByIdAsync(productId, cancellationToken);
+            var product = await productService.GetProductByIdAsync(productId, cancellationToken);
             if (product == null)
             {
                 logger.LogWarning("Product with ID {ProductId} not found", productId);
@@ -104,6 +105,7 @@ public class ProductsController(
 
     [HttpPut("{productId:int}")]
     [Consumes("multipart/form-data")]
+    [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateProduct(int productId, [FromForm] UpdateProductViewModel<IFormFileCollection> model,
         CancellationToken cancellationToken = default)
     {
@@ -124,6 +126,22 @@ public class ProductsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating product with ID {ProductId}", productId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
+    [HttpGet("categories")]
+    public async Task<ActionResult<List<ListCategoryViewModel>>> GetProductCategories(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var categories = await productService.GetAllCategoriesAsync(cancellationToken);
+            logger.LogDebug("Fetched {Count} product categories", categories.Count);
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching product categories");
             return StatusCode(500, "Internal server error");
         }
     }
