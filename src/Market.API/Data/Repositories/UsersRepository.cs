@@ -94,4 +94,16 @@ public class UsersRepository(ApplicationDbContext context) : IUsersRepository
         
         return true;
     }
+    
+    public async Task UpdateNotificationTokenAsync(Guid userId, string? token, CancellationToken cancellationToken = default)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user == null)
+            throw new KeyNotFoundException($"User with ID {userId} not found");
+
+
+        user.NotificationToken = token;
+
+        context.Users.Update(user);
+    }
 }

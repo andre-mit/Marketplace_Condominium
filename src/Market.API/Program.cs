@@ -124,6 +124,17 @@ return;
 static void AddServices(WebApplicationBuilder builder)
 {
     builder.Services.AddSingleton<IPushNotificationService, PushNotificationService>();
+    
+    builder.Services.AddSingleton<IExpoNotificationService, ExpoNotificationService>();
+    
+    const string ExpoPushUrl = "https://exp.host/--/api/v2/push/send";
+    builder.Services.AddHttpClient("ExpoPushApi", client =>
+    {
+        client.BaseAddress = new Uri(ExpoPushUrl);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+    
     builder.Services.AddSingleton<IRedisKeyService, RedisKeyService>();
 
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

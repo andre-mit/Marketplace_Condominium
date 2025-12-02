@@ -24,4 +24,5 @@ public interface IUsersRepository
 
     bool AddResetPasswordCode(string email, string code);
     bool ResetPassword(string email, string code, string newPasswordHash);
+    Task UpdateNotificationTokenAsync(Guid userId, string? token, CancellationToken cancellationToken = default);
 }

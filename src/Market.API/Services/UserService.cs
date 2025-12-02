@@ -58,7 +58,7 @@ public class UserService(
             logger.LogError(ex.Message, "Error creating user with email: {Email}", model.Email);
 
             if (imageUrl == null) throw;
-            
+
             var cacheKey = $"{Constants.OrphanedImagePrefix}_{Guid.NewGuid()}";
             await cache.SetStringAsync(cacheKey, imageUrl, new DistributedCacheEntryOptions
             {
@@ -84,5 +84,52 @@ public class UserService(
         logger.LogInformation("User updated successfully your password. UserId: {UserId}", userId);
 
         return true;
+    }
+
+    public async Task<bool?> RegisterPushTokenAsync(Guid userId, string token,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await usersRepository.UpdateNotificationTokenAsync(userId, token, cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
+            
+            logger.LogInformation("Push token registered successfully for user {UserId}", userId);
+            
+            return true;
+        }
+        catch (KeyNotFoundException x)
+        {
+            logger.LogWarning(x, "User not found when registering push token. UserId: {UserId}", userId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error registering push token for user {UserId}", userId);
+            return false;
+        }
+    }
+
+    public async Task<bool?> UnregisterPushTokenAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await usersRepository.UpdateNotificationTokenAsync(userId, null, cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
+            
+            logger.LogInformation("Push token unregistered successfully for user {UserId}", userId);
+
+            return true;
+        }
+        catch (KeyNotFoundException x)
+        {
+            logger.LogWarning(x, "User not found when unregistering push token. UserId: {UserId}", userId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error unregistering push token for user {UserId}", userId);
+            return false;
+        }
     }
 }

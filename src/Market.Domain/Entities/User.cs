@@ -28,6 +28,8 @@ public class User
     public UserVerificationStatus VerificationStatus { get; set; } = UserVerificationStatus.Pending;
     
     public byte Rating { get; set; }
+    
+    public string? NotificationToken { get; set; } = null;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

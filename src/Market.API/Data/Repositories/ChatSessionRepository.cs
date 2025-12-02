@@ -32,6 +32,8 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
         return await context.ChatSessions
             .AsNoTracking()
             .Include(cs => cs.Messages)
+            .Include(cs => cs.Buyer)
+            .Include(cs => cs.Seller)
             .FirstOrDefaultAsync(cs => cs.Id == chatSessionId);
     }
 

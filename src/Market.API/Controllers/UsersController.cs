@@ -1,7 +1,4 @@
 using System.Security.Claims;
-using Market.API.Helpers;
-using Market.API.Services.Interfaces;
-using Market.Domain.Repositories;
 using Market.SharedApplication.ViewModels.UserViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +28,8 @@ public class UsersController(
     }
 
     [HttpPut("me")]
-    public async Task<IActionResult> UpdateMe(UpdateUserPasswordViewModel model, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> UpdateMe(UpdateUserPasswordViewModel model,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -48,7 +46,7 @@ public class UsersController(
 
             if (await userService.UpdateUserPasswordAsync(userIdGuid, model.Password, cancellationToken))
                 return NoContent();
-            
+
             return BadRequest("User not found");
         }
         catch (Exception ex)
@@ -69,6 +67,65 @@ public class UsersController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error retrieving user ratings");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("push-token")]
+    public async Task<IActionResult> RegisterPushToken(RegisterPushTokenViewModel model,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
+                return Unauthorized("Invalid user ID");
+
+            var response = await userService.RegisterPushTokenAsync(userIdGuid, model.Token, cancellationToken);
+
+            if (!response.HasValue) return BadRequest("User not found");
+
+            if (response.Value)
+                return NoContent();
+
+            return BadRequest("Failed to register push token");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error registering push token");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpDelete("push-token")]
+    public async Task<IActionResult> UnregisterPushToken(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
+                return Unauthorized("Invalid user ID");
+
+            var response = await userService.UnregisterPushTokenAsync(userIdGuid, cancellationToken);
+
+            if (!response.HasValue) return BadRequest("User not found");
+
+            if (response.Value)
+                return NoContent();
+
+            return BadRequest("Failed to unregister push token");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error unregistering push token");
             return StatusCode(500, "Internal server error");
         }
     }
