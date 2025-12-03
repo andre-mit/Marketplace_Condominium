@@ -143,6 +143,7 @@ static void AddServices(WebApplicationBuilder builder)
     builder.Services.AddTransient<IAuthService, AuthService>();
     builder.Services.AddTransient<IUserService, UserService>();
     builder.Services.AddTransient<IProductService, ProductService>();
+    builder.Services.AddTransient<IChatService, ChatService>();
 
     builder.Services.AddSingleton<IUploadFileService, UploadFileService>();
 

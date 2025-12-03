@@ -11,17 +11,17 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
         var product = await context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId);
         if (product == null)
             throw new ArgumentException("Invalid product ID");
-        
+
         if (product.OwnerId == customerId)
             throw new InvalidOperationException("Cannot create chat session with yourself");
-        
+
         var chatSession = new ChatSession
         {
             ProductId = productId,
             BuyerId = customerId,
             SellerId = product.OwnerId
         };
-        
+
         context.ChatSessions.Add(chatSession);
         await context.SaveChangesAsync();
         return chatSession.Id;
@@ -44,5 +44,19 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
             .Where(cs => cs.BuyerId == userId || cs.SellerId == userId)
             .Include(cs => cs.Messages)
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<ChatSession>> GetSyncChatSessionsAsync(Guid userId, DateTime lastSync,
+        CancellationToken cancellationToken)
+    {
+        return await context.ChatSessions
+            .AsNoTracking()
+            .Where(cs => (cs.BuyerId == userId || cs.SellerId == userId) && cs.UpdatedAt > lastSync)
+            .Include(cs => cs.Messages.Where(m => m.SentAt > lastSync))
+            .Include(cs => cs.Buyer)
+            .Include(cs => cs.Seller)
+            .Include(cs => cs.Product)
+                .ThenInclude(p => p.Images)
+            .ToListAsync(cancellationToken);
     }
 }

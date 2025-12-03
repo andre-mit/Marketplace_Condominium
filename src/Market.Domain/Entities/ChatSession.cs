@@ -16,4 +16,10 @@ public class ChatSession
     public ICollection<ChatMessage>? Messages { get; set; } = new List<ChatMessage>();
     
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+    public bool UserIsParticipantInChat(Guid userId)
+    {
+        return BuyerId != userId && SellerId != userId;
+    }
 }

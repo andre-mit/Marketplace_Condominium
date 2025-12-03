@@ -6,12 +6,14 @@ namespace Market.API.Data.Repositories;
 
 public class ChatMessageRepository(ApplicationDbContext context) : IChatMessageRepository
 {
-    public async Task AddMessageAsync(Guid chatSessionId, Guid senderId, string message)
+    public async Task AddMessageAsync(Guid chatSessionId, Guid senderId, string message,
+        CancellationToken cancellationToken = default)
     {
-        var chatSession = await context.ChatSessions.FindAsync(chatSessionId);
+        var chatSession = await context.ChatSessions.Include(c => c.Messages)
+            .FirstOrDefaultAsync(c => c.Id == chatSessionId, cancellationToken);
         if (chatSession == null)
             throw new ArgumentException("Invalid chat session ID");
-        
+
         var chatMessage = new ChatMessage
         {
             ChatSessionId = chatSessionId,
@@ -19,9 +21,11 @@ public class ChatMessageRepository(ApplicationDbContext context) : IChatMessageR
             Content = message,
             SentAt = DateTime.UtcNow
         };
-        
-        context.ChatMessages.Add(chatMessage);
-        await context.SaveChangesAsync();
+
+        chatSession.UpdatedAt = DateTime.UtcNow;
+        chatSession.Messages?.Add(chatMessage);
+
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<ChatMessage>> GetMessagesByChatSessionIdAsync(Guid chatSessionId)

@@ -28,6 +28,7 @@ public class ListProductViewModel
         public required string Name { get; set; }
         public string? ProfileImageUrl { get; set; }
         public decimal Rating { get; set; }
+        public int RatingsCount { get; set; }
     }
 
     public static implicit operator ListProductViewModel(Domain.Entities.Product product) => new ListProductViewModel
@@ -36,11 +37,12 @@ public class ListProductViewModel
         Name = product.Name,
         Description = product.Description,
         Price = product.Price,
-        Owner = new UserListForProductViewModel
+        Owner =  new UserListForProductViewModel
         {
-            Name = $"{product.Owner.FirstName} {product.Owner.LastName}",
+            Name = $"{product.Owner!.FirstName} {product.Owner.LastName}",
             ProfileImageUrl = product.Owner.AvatarUrl,
-            Rating = (decimal)product.Owner.Rating / 100
+            Rating = (decimal)product.Owner.Rating / product.Owner.RatingsCount,
+            RatingsCount = product.Owner.RatingsCount
         },
         ImageUrls = product.Images?.Select(i => i.Url).ToList(),
         Condition = product.Condition,

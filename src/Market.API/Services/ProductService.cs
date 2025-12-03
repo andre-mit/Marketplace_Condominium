@@ -55,31 +55,8 @@ public class ProductService(
         {
             Id = c.Id,
             Name = c.Name,
-            Icon = c.Icon,
-            Products = c.Products.Select(prod => new ListProductViewModel
-            {
-                Id = prod.Id,
-                Name = prod.Name,
-                Description = prod.Description,
-                AdvertisementTypes = prod.AdvertisementTypes,
-                Owner = new ListProductViewModel.UserListForProductViewModel
-                {
-                    Name = prod.Owner.FullName,
-                    Rating = prod.Owner.Rating,
-                    ProfileImageUrl = prod.Owner.AvatarUrl
-                },
-                Category = new ListCategoryViewModel
-                {
-                    Id = prod.Category?.Id ?? 0,
-                    Name = prod.Category?.Name ?? "Outros",
-                    Icon = prod.Category?.Icon ?? "dot-circle"
-                },
-                Price = prod.Price,
-                Condition = prod.Condition,
-                CreatedAt = prod.CreatedAt,
-                UpdatedAt = prod.UpdatedAt,
-                ImageUrls = prod.Images?.Select(img => img.Url).ToList()
-            }).ToList()
+            Icon = c.Icon!,
+            Products = c.Products!.Select(prod => (ListProductViewModel)prod).ToList()
         });
 
         return categorizedProducts.ToList();

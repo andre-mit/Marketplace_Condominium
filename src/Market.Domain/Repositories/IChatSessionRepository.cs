@@ -29,4 +29,13 @@ public interface IChatSessionRepository
     /// <param name="userId"></param>
     /// <returns>A collection of chat sessions.</returns>
     Task<IEnumerable<ChatSession>> GetChatSessionsByUserIdAsync(Guid userId);
+    
+    /// <summary>
+    /// Retrieves chat sessions that have been updated since the last synchronization time for a specific user.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="lastSync"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>A collection of chat sessions updated since the last sync.</returns>
+    Task<IEnumerable<ChatSession>> GetSyncChatSessionsAsync(Guid userId, DateTime lastSync, CancellationToken cancellationToken = default);
 }
