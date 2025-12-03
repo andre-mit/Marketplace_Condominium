@@ -10,11 +10,16 @@ public class UploadFileService(ILogger<UploadFileService> logger, IAmazonS3 s3Cl
 {
     private readonly S3Config _settings = options.Value;
 
-    public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string bucketName,
+    public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string folder, string contentType, string bucketName,
         CancellationToken cancellationToken = default)
     {
         try
         {
+            if(!folder.IsNullOrWhiteSpace())
+            {
+                fileName = $"{folder.TrimEnd('/')}/{fileName}";
+            }
+            
             var request = new PutObjectRequest
             {
                 BucketName = bucketName,

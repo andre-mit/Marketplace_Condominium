@@ -26,8 +26,9 @@ public class UserService(
             {
                 await using var stream = model.Image.OpenReadStream();
                 imageUrl = await uploadFileService.UploadFileAsync(stream, model.Image.FileName,
+                    "",
                     model.Image.ContentType,
-                    Constants.ProductImagesBucket,
+                    Constants.UserAvatarsBucket,
                     cancellationToken);
             }
 

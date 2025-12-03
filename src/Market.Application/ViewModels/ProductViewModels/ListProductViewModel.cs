@@ -27,6 +27,31 @@ public class ListProductViewModel
     {
         public required string Name { get; set; }
         public string? ProfileImageUrl { get; set; }
-        public byte Rating { get; set; }
+        public decimal Rating { get; set; }
     }
+
+    public static implicit operator ListProductViewModel(Domain.Entities.Product product) => new ListProductViewModel
+    {
+        Id = product.Id,
+        Name = product.Name,
+        Description = product.Description,
+        Price = product.Price,
+        Owner = new UserListForProductViewModel
+        {
+            Name = $"{product.Owner.FirstName} {product.Owner.LastName}",
+            ProfileImageUrl = product.Owner.AvatarUrl,
+            Rating = (decimal)product.Owner.Rating / 100
+        },
+        ImageUrls = product.Images?.Select(i => i.Url).ToList(),
+        Condition = product.Condition,
+        CreatedAt = product.CreatedAt,
+        UpdatedAt = product.UpdatedAt,
+        AdvertisementTypes = product.AdvertisementTypes,
+        Category = product.Category != null ? new ListCategoryViewModel
+        {
+            Id = product.Category.Id,
+            Name = product.Category.Name,
+            Icon = product.Category.Icon
+        } : null
+    };
 }

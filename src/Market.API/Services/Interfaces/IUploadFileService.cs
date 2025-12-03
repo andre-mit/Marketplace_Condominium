@@ -11,7 +11,7 @@ public interface IUploadFileService
     /// <param name="bucketName">The name of the container to upload the file to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The URI of the uploaded file.</returns>
-    Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string bucketName,
+    Task<string> UploadFileAsync(Stream fileStream, string fileName, string folder, string contentType, string bucketName,
         CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -27,7 +27,8 @@ public class User
 
     public UserVerificationStatus VerificationStatus { get; set; } = UserVerificationStatus.Pending;
     
-    public byte Rating { get; set; }
+    public uint Rating { get; set; }
+    public ushort RatingsCount { get; set; }
     
     public string? NotificationToken { get; set; } = null;
 

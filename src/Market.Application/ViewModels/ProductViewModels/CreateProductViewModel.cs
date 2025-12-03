@@ -18,4 +18,6 @@ public class CreateProductViewModel<T>
     public required TransactionType[] AdvertisementTypes { get; set; }
     
     public T? Images { get; set; }
+    
+    public int? CategoryId { get; set; }
 }

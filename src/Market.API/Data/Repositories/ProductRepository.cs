@@ -73,20 +73,24 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
         return await context.Products.CountAsync(cancellationToken);
     }
 
-    public async Task<List<Product>> GetGroupedByCategoryProductsAsync(int limitByCategory,
+    public async Task<List<CategoryWithProducts>> GetGroupedByCategoryProductsAsync(int limitByCategory,
         CancellationToken cancellationToken = default)
     {
-        var query = context.Products
+        var products = await context.Products
             .Include(p => p.Images)
             .Include(p => p.Category)
             .Include(p => p.Owner)
             .Where(p => p.IsAvailable)
             .GroupBy(p => p.CategoryId)
-            .SelectMany(group =>
-                group.OrderByDescending(p => p.CreatedAt)
-                    .Take(limitByCategory));
+            .Select(g => new CategoryWithProducts
+            {
+                Id = g.Key ?? 0,
+                Name =  g.Key.HasValue ? g.First().Category.Name : "Outros",
+                Icon = g.Key.HasValue ? g.First().Category.Icon : "dot-circle",
+                Products = g.Take(limitByCategory).ToList()
+            }).ToListAsync(cancellationToken);
 
-        return await query.ToListAsync(cancellationToken);
+        return products;
     }
 
     public async Task<List<Category>> GetAllCategoriesAsync(CancellationToken cancellationToken = default)
@@ -94,7 +98,8 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
         return await context.Categories.ToListAsync(cancellationToken);
     }
 
-    public async Task<Product?> GetProductWithDetailsByIdAsync(int productId, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetProductWithDetailsByIdAsync(int productId,
+        CancellationToken cancellationToken = default)
     {
         return await context.Products
             .Include(p => p.Images)

@@ -45,39 +45,46 @@ public class ProductService(
             Category = category
         };
     }
-    
+
     public async Task<List<ListCategorizedProductsViewModel>> ListCategorizedProductsAsync(int limitByCategory,
         CancellationToken cancellationToken = default)
     {
         var response = await productsRepository.GetGroupedByCategoryProductsAsync(limitByCategory, cancellationToken);
-        var categorizedProducts = from product in response
-            group product by product.Category into categoryGroup
-            select new ListCategorizedProductsViewModel
+
+        var categorizedProducts = response.Select(c => new ListCategorizedProductsViewModel
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Icon = c.Icon,
+            Products = c.Products.Select(prod => new ListProductViewModel
             {
-                Id = categoryGroup.Key.Id,
-                Name = categoryGroup.Key.Name,
-                Products = categoryGroup.Select(p => new ListProductViewModel
+                Id = prod.Id,
+                Name = prod.Name,
+                Description = prod.Description,
+                AdvertisementTypes = prod.AdvertisementTypes,
+                Owner = new ListProductViewModel.UserListForProductViewModel
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Price = p.Price,
-                    ImageUrls = p.Images?.Select(img => img.Url)?.ToList(),
-                    Condition = p.Condition,
-                    AdvertisementTypes = p.AdvertisementTypes,
-                    CreatedAt = p.CreatedAt,
-                    UpdatedAt = p.UpdatedAt,
-                    Owner = new ListProductViewModel.UserListForProductViewModel
-                    {
-                        Name = p.Owner!.FullName,
-                        ProfileImageUrl = p.Owner!.AvatarUrl,
-                        Rating = p.Owner!.Rating
-                    }
-                }).ToList()
-            };
+                    Name = prod.Owner.FullName,
+                    Rating = prod.Owner.Rating,
+                    ProfileImageUrl = prod.Owner.AvatarUrl
+                },
+                Category = new ListCategoryViewModel
+                {
+                    Id = prod.Category?.Id ?? 0,
+                    Name = prod.Category?.Name ?? "Outros",
+                    Icon = prod.Category?.Icon ?? "dot-circle"
+                },
+                Price = prod.Price,
+                Condition = prod.Condition,
+                CreatedAt = prod.CreatedAt,
+                UpdatedAt = prod.UpdatedAt,
+                ImageUrls = prod.Images?.Select(img => img.Url).ToList()
+            }).ToList()
+        });
 
         return categorizedProducts.ToList();
     }
+
     public async Task<int> CreateProductAsync(CreateProductViewModel<IFormFileCollection> createUpdateProductViewModel,
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -91,6 +98,7 @@ public class ProductService(
                 {
                     await using var stream = image.OpenReadStream();
                     var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName,
+                        "",
                         image.ContentType,
                         Constants.ProductImagesBucket,
                         cancellationToken);
@@ -108,7 +116,9 @@ public class ProductService(
                 Condition = createUpdateProductViewModel.Condition,
                 AdvertisementTypes = createUpdateProductViewModel.AdvertisementTypes,
                 ExchangeMessage = createUpdateProductViewModel.ExchangeMessage,
-                IsAvailable = true
+                IsAvailable = true,
+                CategoryId = createUpdateProductViewModel.CategoryId,
+                CreatedAt = DateTime.UtcNow,
             };
 
             var productId = await productsRepository.AddProductAsync(product, cancellationToken);
@@ -166,6 +176,7 @@ public class ProductService(
             {
                 await using var stream = image.OpenReadStream();
                 var imageUrl = await uploadFileService.UploadFileAsync(stream, image.FileName,
+                    "",
                     image.ContentType,
                     Constants.ProductImagesBucket,
                     cancellationToken);
@@ -195,7 +206,8 @@ public class ProductService(
         return categories.Select(c => new ListCategoryViewModel
         {
             Id = c.Id,
-            Name = c.Name
+            Name = c.Name,
+            Icon = c.Icon
         }).ToList();
     }
 }

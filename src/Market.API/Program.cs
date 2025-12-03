@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(x =>
 
             var path = context.HttpContext.Request.Path;
             if (!string.IsNullOrEmpty(accessToken) &&
-                (path.StartsWithSegments("/hubs/chatHub")))
+                (path.StartsWithSegments("/hubs/chatHub") || path.StartsWithSegments("/hubs/adminHub")))
             {
                 context.Token = accessToken;
             }
@@ -115,6 +115,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHub<ChatHub>("/hubs/chatHub");
+app.MapHub<AdminHub>("/hubs/adminHub");
 
 app.Run();
 return;
@@ -124,9 +125,9 @@ return;
 static void AddServices(WebApplicationBuilder builder)
 {
     builder.Services.AddSingleton<IPushNotificationService, PushNotificationService>();
-    
+
     builder.Services.AddSingleton<IExpoNotificationService, ExpoNotificationService>();
-    
+
     const string ExpoPushUrl = "https://exp.host/--/api/v2/push/send";
     builder.Services.AddHttpClient("ExpoPushApi", client =>
     {
@@ -134,7 +135,7 @@ static void AddServices(WebApplicationBuilder builder)
         client.DefaultRequestHeaders.Add("Accept", "application/json");
         client.Timeout = TimeSpan.FromSeconds(30);
     });
-    
+
     builder.Services.AddSingleton<IRedisKeyService, RedisKeyService>();
 
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -167,6 +168,7 @@ static void AddRepositories(IServiceCollection services)
     services.AddScoped<IProductsRepository, ProductRepository>();
     services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
     services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+    services.AddScoped<ITransactionRepository, TransactionRepository>();
 }
 
 static void AddDataServices(WebApplicationBuilder builder, string[] args)

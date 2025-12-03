@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Market.API.Services.Interfaces;
 using Market.Domain.Repositories;
 using Market.SharedApplication.ViewModels.CategoryViewModels;
@@ -148,7 +149,7 @@ public class ProductsController(
     
     private Guid? GetUserIdFromClaims()
     {
-        var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
             return null;
 
