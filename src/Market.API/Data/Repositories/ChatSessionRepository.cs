@@ -6,9 +6,9 @@ namespace Market.API.Data.Repositories;
 
 public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionRepository
 {
-    public async Task<Guid> CreateChatSessionAsync(int productId, Guid customerId)
+    public async Task<Guid> CreateChatSessionAsync(int productId, Guid customerId, CancellationToken cancellationToken = default)
     {
-        var product = await context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId);
+        var product = await context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
         if (product == null)
             throw new ArgumentException("Invalid product ID");
 

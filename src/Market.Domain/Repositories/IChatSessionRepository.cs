@@ -14,7 +14,7 @@ public interface IChatSessionRepository
     /// <param name="productId"></param>
     /// <param name="customerId"></param>
     /// <returns>The ID of the newly created chat session.</returns>
-    Task<Guid> CreateChatSessionAsync(int productId, Guid customerId);
+    Task<Guid> CreateChatSessionAsync(int productId, Guid customerId, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Retrieves a chat session by its ID.

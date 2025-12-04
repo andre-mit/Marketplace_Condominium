@@ -15,35 +15,12 @@ public class ProductService(
         CancellationToken cancellationToken = default)
     {
         var product = await productsRepository.GetProductByIdAsync(productId, cancellationToken);
-        if (product == null)
-        {
-            logger.LogInformation("Product {ProductId} not found", productId);
-            return null;
-        }
+        
+        if (product != null) return (ListProductViewModel)product;
+        
+        logger.LogInformation("Product {ProductId} not found", productId);
+        return null;
 
-        ListCategoryViewModel? category = null;
-        if (product.Category != null)
-            category = product.Category;
-
-        return new ListProductViewModel
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Description = product.Description,
-            Price = product.Price,
-            ImageUrls = product.Images?.Select(img => img.Url)?.ToList(),
-            Condition = product.Condition,
-            AdvertisementTypes = product.AdvertisementTypes,
-            CreatedAt = product.CreatedAt,
-            UpdatedAt = product.UpdatedAt,
-            Owner = new ListProductViewModel.UserListForProductViewModel
-            {
-                Name = product.Owner!.FullName,
-                ProfileImageUrl = product.Owner!.AvatarUrl,
-                Rating = product.Owner!.Rating
-            },
-            Category = category
-        };
     }
 
     public async Task<List<ListCategorizedProductsViewModel>> ListCategorizedProductsAsync(int limitByCategory,

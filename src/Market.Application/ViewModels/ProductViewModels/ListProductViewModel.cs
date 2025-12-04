@@ -25,13 +25,14 @@ public class ListProductViewModel
 
     public class UserListForProductViewModel
     {
+        public required Guid Id { get; set; }
         public required string Name { get; set; }
         public string? ProfileImageUrl { get; set; }
         public decimal Rating { get; set; }
         public int RatingsCount { get; set; }
     }
 
-    public static implicit operator ListProductViewModel(Domain.Entities.Product product) => new ListProductViewModel
+    public static implicit operator ListProductViewModel(Domain.Entities.Product product) => new()
     {
         Id = product.Id,
         Name = product.Name,
@@ -39,6 +40,7 @@ public class ListProductViewModel
         Price = product.Price,
         Owner =  new UserListForProductViewModel
         {
+            Id = product.Owner!.Id,
             Name = $"{product.Owner!.FirstName} {product.Owner.LastName}",
             ProfileImageUrl = product.Owner.AvatarUrl,
             Rating = (decimal)product.Owner.Rating / product.Owner.RatingsCount,

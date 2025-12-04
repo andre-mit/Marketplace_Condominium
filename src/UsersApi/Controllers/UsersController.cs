@@ -32,6 +32,7 @@ public class UsersController : ControllerBase
             var users = System.Text.Json.JsonSerializer.Deserialize<List<User>>(usersData)!;
 
             users.ForEach(user => user.Normalize());
+            model.Normalize();
 
             var userExists = users.Any(u =>
                 u.Name == model.Name &&

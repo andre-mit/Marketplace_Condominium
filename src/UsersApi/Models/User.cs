@@ -1,20 +1,10 @@
 using System.Text.RegularExpressions;
+using Market.SharedApplication.ViewModels.UserViewModels;
 
 namespace UsersApi.Models;
 
-public class User
+public class User : UserVerificationViewModel
 {
-    public string Name { get; set; }
-    public string Cpf { get; set; }
-    public DateOnly Birth { get; set; }
-
-    public string Email { get; set; }
-
-    public string Phone { get; set; }
-
-    public string Unit { get; set; }
-    public string Tower { get; set; }
-
     public void Normalize()
     {
         Email = Email.ToLowerInvariant().Trim();

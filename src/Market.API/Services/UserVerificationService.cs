@@ -1,5 +1,6 @@
 using Market.API.Hubs;
 using Market.Domain.Enums;
+using Market.SharedApplication.ViewModels.UserViewModels;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
@@ -55,7 +56,7 @@ public class UserVerificationService(
 
         do
         {
-            var jsonData = JsonConvert.SerializeObject(new UserVerificationRequest(user.FullName, user.Cpf, user.Birth,
+            var jsonData = JsonConvert.SerializeObject(new UserVerificationViewModel(user.FullName, user.Cpf, user.Birth,
                 user.Email, user.Phone, user.Unit, user.Tower));
 
             var jsonDataContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
@@ -101,13 +102,4 @@ public class UserVerificationService(
             count++;
         } while (!success && count < 3 && !cancellationToken.IsCancellationRequested);
     }
-
-    private record UserVerificationRequest(
-        string Name,
-        string Cpf,
-        DateOnly Birth,
-        string Email,
-        string Phone,
-        string Unit,
-        string Tower);
 }

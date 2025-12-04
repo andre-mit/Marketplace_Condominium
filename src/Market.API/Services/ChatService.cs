@@ -8,6 +8,17 @@ public class ChatService(
     IChatMessageRepository chatMessageRepository,
     IExpoNotificationService expoNotificationService) : IChatService
 {
+    public async Task<Guid> CreateChatAsync(Guid userId, int productId,
+        CancellationToken cancellationToken = default)
+    {
+        var chatSessionId = await chatSessionRepository.CreateChatSessionAsync(productId, userId, cancellationToken);
+
+        logger.LogInformation("Chat session {ChatSessionId} created by user {UserId} for product {ProductId}",
+            chatSessionId, userId, productId);
+
+        return chatSessionId;
+    }
+
     public async Task<SyncChatsViewModel> SyncChatsAsync(Guid userId, DateTime? after,
         CancellationToken cancellationToken = default)
     {

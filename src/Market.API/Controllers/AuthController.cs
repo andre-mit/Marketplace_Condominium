@@ -61,7 +61,7 @@ public class AuthController(ILogger<AuthController> logger, IAuthService authSer
         catch (DuplicateNameException ex)
         {
             logger.LogWarning(ex, "Attempt to create a duplicate user with email: {Email} or CPF: {CPF}", model.Email,
-                model.CPF);
+                model.Cpf);
             return Conflict("A user with the given email or CPF already exists.");
         }
         catch (Exception ex)

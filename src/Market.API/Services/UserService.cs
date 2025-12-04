@@ -15,7 +15,7 @@ public class UserService(
     public async Task<ListUserViewModel> CreateUserAsync(CreateUserViewModel<IFormFile> model,
         CancellationToken cancellationToken = default)
     {
-        if (usersRepository.UserAlreadyExists(model.Email, model.CPF))
+        if (usersRepository.UserAlreadyExists(model.Email, model.Cpf))
             throw new DuplicateNameException("A user with the given email or CPF already exists.");
 
         string? imageUrl = null;
@@ -37,10 +37,10 @@ public class UserService(
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Cpf = model.CPF,
+                Cpf = model.Cpf,
                 Email = model.Email,
                 PasswordHash = password,
-                Birth = model.Birth,
+                Birth = DateOnly.Parse(model.Birth.ToString("yyyy-MM-dd")),
                 Unit = model.Unit,
                 Tower = model.Tower,
                 Phone = model.Phone,
@@ -94,9 +94,9 @@ public class UserService(
         {
             await usersRepository.UpdateNotificationTokenAsync(userId, token, cancellationToken);
             await unitOfWork.CommitAsync(cancellationToken);
-            
+
             logger.LogInformation("Push token registered successfully for user {UserId}", userId);
-            
+
             return true;
         }
         catch (KeyNotFoundException x)
@@ -117,7 +117,7 @@ public class UserService(
         {
             await usersRepository.UpdateNotificationTokenAsync(userId, null, cancellationToken);
             await unitOfWork.CommitAsync(cancellationToken);
-            
+
             logger.LogInformation("Push token unregistered successfully for user {UserId}", userId);
 
             return true;
