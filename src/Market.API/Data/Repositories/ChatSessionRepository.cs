@@ -6,14 +6,23 @@ namespace Market.API.Data.Repositories;
 
 public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionRepository
 {
-    public async Task<Guid> CreateChatSessionAsync(int productId, Guid customerId, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateChatSessionAsync(int productId, Guid customerId,
+        CancellationToken cancellationToken = default)
     {
-        var product = await context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
+        var product = await context.Products.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
         if (product == null)
             throw new ArgumentException("Invalid product ID");
 
         if (product.OwnerId == customerId)
             throw new InvalidOperationException("Cannot create chat session with yourself");
+        
+        var existingChat = await context.ChatSessions.AsNoTracking()
+            .FirstOrDefaultAsync(cs => cs.ProductId == productId &&
+                                       cs.BuyerId == customerId &&
+                                       cs.SellerId == product.OwnerId, cancellationToken);
+        if (existingChat != null)
+            return existingChat.Id;
 
         var chatSession = new ChatSession
         {
@@ -23,17 +32,20 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
         };
 
         context.ChatSessions.Add(chatSession);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
         return chatSession.Id;
     }
 
-    public async Task<ChatSession?> GetChatSessionByIdAsync(Guid chatSessionId)
+    public async Task<ChatSession?> GetChatSessionByIdAsync(Guid chatSessionId,
+        CancellationToken cancellationToken = default)
     {
         return await context.ChatSessions
             .AsNoTracking()
             .Include(cs => cs.Messages)
             .Include(cs => cs.Buyer)
             .Include(cs => cs.Seller)
+            .Include(cs => cs.Product)
+            .ThenInclude(p => p.Images)
             .FirstOrDefaultAsync(cs => cs.Id == chatSessionId);
     }
 
@@ -56,7 +68,7 @@ public class ChatSessionRepository(ApplicationDbContext context) : IChatSessionR
             .Include(cs => cs.Buyer)
             .Include(cs => cs.Seller)
             .Include(cs => cs.Product)
-                .ThenInclude(p => p.Images)
+            .ThenInclude(p => p.Images)
             .ToListAsync(cancellationToken);
     }
 }

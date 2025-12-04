@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Market.API.Services.Interfaces;
+using Market.Domain.Enums;
 using Market.Domain.Repositories;
 using Market.SharedApplication.ViewModels.CategoryViewModels;
 using Market.SharedApplication.ViewModels.ProductViewModels;
@@ -14,22 +15,27 @@ namespace Market.API.Controllers;
 [Authorize]
 public class ProductsController(
     ILogger<ProductsController> logger,
-    IProductsRepository productsRepository,
     IProductService productService)
     : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllProducts([FromQuery] int page = 1,
+    public async Task<IActionResult> GetAllProducts(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] int? categoryId = null,
+        [FromQuery] TransactionType? transactionType = null,
+        [FromQuery] ProductCondition? condition = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await productsRepository.GetAvailableProductsAsync(page, 10, cancellationToken);
-            Response.Headers.Append("X-Total-Count", response.TotalCount.ToString());
+            var response =
+                await productService.ListProductsAsync(page, pageSize, searchTerm, categoryId, transactionType,
+                    condition, cancellationToken);
 
             logger.LogDebug("Fetched {Count} products", response.TotalCount);
 
-            return Ok(response.Items);
+            return Ok(response);
         }
         catch (Exception ex)
         {
@@ -38,13 +44,45 @@ public class ProductsController(
         }
     }
     
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMyProducts(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] int? categoryId = null,
+        [FromQuery] TransactionType? transactionType = null,
+        [FromQuery] ProductCondition? condition = null,
+        [FromQuery] bool? isAvailable = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var userId = GetUserIdFromClaims();
+            if (userId == null)
+                return Unauthorized("Invalid user ID");
+
+            var response =
+                await productService.ListMineProductsAsync(userId.Value, page, pageSize, searchTerm, categoryId,
+                    transactionType,
+                    condition, isAvailable, cancellationToken);
+            
+            logger.LogDebug("Fetched {Count} products for user {UserId}", response.TotalCount, userId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching user's products");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("categorized")]
     public async Task<IActionResult> GetCategorizedProducts([FromQuery] int limitByCategory = 5,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var categorizedProducts = await productService.ListCategorizedProductsAsync(limitByCategory, cancellationToken);
+            var categorizedProducts =
+                await productService.ListCategorizedProductsAsync(limitByCategory, cancellationToken);
             logger.LogDebug("Fetched categorized products with limit {LimitByCategory}", limitByCategory);
             return Ok(categorizedProducts);
         }
@@ -54,7 +92,7 @@ public class ProductsController(
             return StatusCode(500, "Internal server error");
         }
     }
-    
+
     [HttpGet("{productId:int}")]
     public async Task<IActionResult> GetProductById([FromRoute] int productId,
         CancellationToken cancellationToken = default)
@@ -107,7 +145,8 @@ public class ProductsController(
     [HttpPut("{productId:int}")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(204)]
-    public async Task<IActionResult> UpdateProduct(int productId, [FromForm] UpdateProductViewModel<IFormFileCollection> model,
+    public async Task<IActionResult> UpdateProduct(int productId,
+        [FromForm] UpdateProductViewModel<IFormFileCollection> model,
         CancellationToken cancellationToken = default)
     {
         try
@@ -130,9 +169,10 @@ public class ProductsController(
             return StatusCode(500, "Internal server error");
         }
     }
-    
+
     [HttpGet("categories")]
-    public async Task<ActionResult<List<ListCategoryViewModel>>> GetProductCategories(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<List<ListCategoryViewModel>>> GetProductCategories(
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -146,7 +186,7 @@ public class ProductsController(
             return StatusCode(500, "Internal server error");
         }
     }
-    
+
     private Guid? GetUserIdFromClaims()
     {
         var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

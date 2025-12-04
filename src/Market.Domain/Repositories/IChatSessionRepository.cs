@@ -15,21 +15,21 @@ public interface IChatSessionRepository
     /// <param name="customerId"></param>
     /// <returns>The ID of the newly created chat session.</returns>
     Task<Guid> CreateChatSessionAsync(int productId, Guid customerId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves a chat session by its ID.
     /// </summary>
     /// <param name="chatSessionId"></param>
     /// <returns>The chat session if found; otherwise, null.</returns>
-    Task<ChatSession?> GetChatSessionByIdAsync(Guid chatSessionId);
-    
+    Task<ChatSession?> GetChatSessionByIdAsync(Guid chatSessionId, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Retrieves all chat sessions associated with a specific user (either as a seller or customer).
     /// </summary>
     /// <param name="userId"></param>
     /// <returns>A collection of chat sessions.</returns>
     Task<IEnumerable<ChatSession>> GetChatSessionsByUserIdAsync(Guid userId);
-    
+
     /// <summary>
     /// Retrieves chat sessions that have been updated since the last synchronization time for a specific user.
     /// </summary>
@@ -37,5 +37,6 @@ public interface IChatSessionRepository
     /// <param name="lastSync"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>A collection of chat sessions updated since the last sync.</returns>
-    Task<IEnumerable<ChatSession>> GetSyncChatSessionsAsync(Guid userId, DateTime lastSync, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ChatSession>> GetSyncChatSessionsAsync(Guid userId, DateTime lastSync,
+        CancellationToken cancellationToken = default);
 }

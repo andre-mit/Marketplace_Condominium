@@ -27,42 +27,16 @@ public class UsersController(
         return Ok(user);
     }
 
-    [HttpPut("me")]
-    public async Task<IActionResult> UpdateMe(UpdateUserPasswordViewModel model,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (model.Password != model.ConfirmPassword)
-                return BadRequest("Passwords do not match");
-
-            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
-                return Unauthorized("Invalid user ID");
-
-            if (await userService.UpdateUserPasswordAsync(userIdGuid, model.Password, cancellationToken))
-                return NoContent();
-
-            return BadRequest("User not found");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error updating user password");
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
     [HttpGet("{id:guid}/ratings")]
-    public IActionResult GetUserRatings(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetUserRatings(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            var ratings = transactionRepository.GetUserRatingsAsync(id, cancellationToken);
-            return Ok(ratings);
+            var user = await userService.GetUserWithReviewsAsync(id, cancellationToken);
+            if (user == null)
+                return NotFound("User not found");
+
+            return Ok(user);
         }
         catch (Exception ex)
         {
@@ -126,6 +100,61 @@ public class UsersController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error unregistering push token");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPut("me/password")]
+    public async Task<IActionResult> UpdatePassword(UpdateUserPasswordViewModel model,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
+                return Unauthorized("Invalid user ID");
+
+            var result = await userService.UpdateUserPasswordAsync(userIdGuid, model.CurrentPassword, model.Password,
+                cancellationToken);
+
+            if (result)
+                return NoContent();
+
+            return BadRequest("Failed to update password");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            logger.LogWarning("Update password is incorrect");
+            return Unauthorized("Current password is incorrect");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating user password");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPut("me/profile-picture")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdateProfilePicture([FromForm] IFormFile profilePicture,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId.IsNullOrWhiteSpace() || !Guid.TryParse(userId, out var userIdGuid))
+                return Unauthorized("Invalid user ID");
+
+            var result = await userService.UpdateUserProfilePictureAsync(userIdGuid, profilePicture, cancellationToken);
+            if (result)
+                return NoContent();
+
+            return BadRequest("Failed to update profile picture");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating user profile picture");
             return StatusCode(500, "Internal server error");
         }
     }

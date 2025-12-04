@@ -1,6 +1,7 @@
 using System.Data;
 using Market.SharedApplication.ViewModels.UserViewModels;
 using Microsoft.Extensions.Caching.Distributed;
+using static BCrypt.Net.BCrypt;
 
 namespace Market.API.Services;
 
@@ -12,6 +13,21 @@ public class UserService(
     IDistributedCache cache,
     IUnitOfWork unitOfWork) : IUserService
 {
+    public async Task<ListUserWithReviews?> GetUserWithReviewsAsync(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await usersRepository.GetUserWithReviewsAsync(userId, cancellationToken);
+        if (user == null)
+        {
+            logger.LogWarning("User not found when retrieving with reviews. UserId: {UserId}", userId);
+            return null;
+        }
+
+        logger.LogInformation("User retrieved successfully with reviews. UserId: {UserId}", userId);
+
+        return user;
+    }
+    
     public async Task<ListUserViewModel> CreateUserAsync(CreateUserViewModel<IFormFile> model,
         CancellationToken cancellationToken = default)
     {
@@ -70,12 +86,18 @@ public class UserService(
         }
     }
 
-    public async Task<bool> UpdateUserPasswordAsync(Guid userId, string newPassword,
+    public async Task<bool> UpdateUserPasswordAsync(Guid userId, string currentPassword, string newPassword,
         CancellationToken cancellationToken = default)
     {
         var user = usersRepository.GetById(userId);
         if (user == null)
             return false;
+        
+        if(!Verify(currentPassword, user.PasswordHash))
+        {
+            logger.LogWarning("Current password is incorrect. UserId: {UserId}", userId);
+            throw new UnauthorizedAccessException("Current password is incorrect.");
+        }
 
         user.PasswordHash = authService.HashPass(newPassword);
 
@@ -131,6 +153,51 @@ public class UserService(
         {
             logger.LogError(ex, "Error unregistering push token for user {UserId}", userId);
             return false;
+        }
+    }
+    
+    public async Task<bool> UpdateUserProfilePictureAsync(Guid userId, IFormFile newImage,
+        CancellationToken cancellationToken = default)
+    {
+        var user = usersRepository.GetById(userId);
+        if (user == null)
+        {
+            logger.LogWarning("User not found when updating profile picture. UserId: {UserId}", userId);
+            return false;
+        }
+
+        string? imageUrl = null;
+
+        try
+        {
+            await using var stream = newImage.OpenReadStream();
+            imageUrl = await uploadFileService.UploadFileAsync(stream, newImage.FileName,
+                "",
+                newImage.ContentType,
+                Constants.UserAvatarsBucket,
+                cancellationToken);
+
+            user.AvatarUrl = imageUrl;
+            usersRepository.Update(user);
+            await unitOfWork.CommitAsync(cancellationToken);
+
+            logger.LogInformation("User profile picture updated successfully. UserId: {UserId}", userId);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating profile picture for user {UserId}", userId);
+
+            if (imageUrl == null) throw;
+
+            var cacheKey = $"{Constants.OrphanedImagePrefix}_{Guid.NewGuid()}";
+            await cache.SetStringAsync(cacheKey, imageUrl, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+            }, cancellationToken);
+
+            throw;
         }
     }
 }

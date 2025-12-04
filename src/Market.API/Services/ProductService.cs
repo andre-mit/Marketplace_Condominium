@@ -1,5 +1,8 @@
+using Market.Domain;
+using Market.Domain.Enums;
 using Market.SharedApplication.ViewModels.CategoryViewModels;
 using Market.SharedApplication.ViewModels.ProductViewModels;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Market.API.Services;
@@ -11,16 +14,53 @@ public class ProductService(
     IUploadFileService uploadFileService,
     IDistributedCache cache) : IProductService
 {
+    public async Task<PaginatedList<ListProductViewModel>> ListProductsAsync(int pageNumber, int pageSize,
+        string? searchTerm = null,
+        int? categoryId = null,
+        TransactionType? transactionType = null,
+        ProductCondition? condition = null,
+        CancellationToken cancellationToken = default)
+    {
+        var products = await productsRepository.GetProductsAsync(pageNumber, pageSize, searchTerm, categoryId,
+            transactionType, condition, true, null, cancellationToken);
+
+        logger.LogInformation("Fetched {ProductCount} products for page {PageNumber} with size {PageSize}",
+            products.Items.Count, pageNumber, pageSize);
+
+        var productViewModels = products.Items.Select(p => (ListProductViewModel)p).ToList();
+        return new PaginatedList<ListProductViewModel>(productViewModels, products.TotalCount);
+    }
+
+    public async Task<PaginatedList<ListProductViewModel>> ListMineProductsAsync(
+        Guid userId,
+        int pageNumber,
+        int pageSize,
+        string? searchTerm = null,
+        int? categoryId = null,
+        TransactionType? transactionType = null,
+        ProductCondition? condition = null,
+        bool? isAvailable = null,
+        CancellationToken cancellationToken = default)
+    {
+        var products = await productsRepository.GetProductsAsync(pageNumber, pageSize, searchTerm, categoryId,
+            transactionType, condition, isAvailable, userId, cancellationToken);
+
+        logger.LogInformation("Fetched {ProductCount} products for page {PageNumber} with size {PageSize}",
+            products.Items.Count, pageNumber, pageSize);
+
+        var productViewModels = products.Items.Select(p => (ListProductViewModel)p).ToList();
+        return new PaginatedList<ListProductViewModel>(productViewModels, products.TotalCount);
+    }
+
     public async Task<ListProductViewModel?> GetProductByIdAsync(int productId,
         CancellationToken cancellationToken = default)
     {
         var product = await productsRepository.GetProductByIdAsync(productId, cancellationToken);
-        
+
         if (product != null) return (ListProductViewModel)product;
-        
+
         logger.LogInformation("Product {ProductId} not found", productId);
         return null;
-
     }
 
     public async Task<List<ListCategorizedProductsViewModel>> ListCategorizedProductsAsync(int limitByCategory,
@@ -120,7 +160,13 @@ public class ProductService(
         product.Condition = createUpdateProductViewModel.Condition;
         product.AdvertisementTypes = createUpdateProductViewModel.AdvertisementTypes;
         product.ExchangeMessage = createUpdateProductViewModel.ExchangeMessage;
+
+        if (createUpdateProductViewModel.CategoryId == 0)
+            createUpdateProductViewModel.CategoryId = null;
+
+        product.CategoryId = createUpdateProductViewModel.CategoryId;
         product.UpdatedAt = DateTime.UtcNow;
+
         if (createUpdateProductViewModel.ImagesToRemoveUrls != null)
             product.Images?.RemoveAll(img => createUpdateProductViewModel.ImagesToRemoveUrls.Contains(img.Url));
 

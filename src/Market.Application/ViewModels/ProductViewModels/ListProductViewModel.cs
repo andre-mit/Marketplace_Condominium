@@ -23,6 +23,8 @@ public class ListProductViewModel
     
     public ListCategoryViewModel? Category { get; set; }
 
+    public bool? IsAvailable { get; set; } = null;
+
     public class UserListForProductViewModel
     {
         public required Guid Id { get; set; }
@@ -51,6 +53,7 @@ public class ListProductViewModel
         CreatedAt = product.CreatedAt,
         UpdatedAt = product.UpdatedAt,
         AdvertisementTypes = product.AdvertisementTypes,
+        IsAvailable = product.IsAvailable,
         Category = product.Category != null ? new ListCategoryViewModel
         {
             Id = product.Category.Id,

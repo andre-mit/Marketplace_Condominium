@@ -3,6 +3,7 @@ using Market.SharedApplication.ViewModels.ChatViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
+using static Market.API.Helpers.Constants;
 
 namespace Market.API.Hubs;
 
@@ -14,38 +15,30 @@ public class ChatHub(
     IChatService chatService,
     IDistributedCache cache) : Hub
 {
-    private const string OnlineUserCacheKey = "chat:online";
-    private const string InChatUserCacheKey = "chat:inchat";
+    
 
     /// <summary>
     /// Sends a message to a chat session.
     /// </summary>
     /// <param name="chatSessionId"></param>
     /// <param name="message"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     /// <exception cref="HubException"></exception>
     [HubMethodName("SendMessage")]
-    public async Task SendMessage(Guid chatSessionId, string message, CancellationToken cancellationToken =default)
+    public async Task SendMessage(string chatSessionId, string message)
     {
+        var chatId = Guid.Parse(chatSessionId);
         var userId = Guid.Parse(Context.UserIdentifier!);
-        
-        var data = chatService.SendMessageAsync(chatSessionId, userId, message);
-        
-        await Clients.Group(chatSessionId.ToString()).SendAsync("ReceiveMessage", data);
-        
-        
-    }
-    
-    private async Task SendMessageMigrateToService(Guid chatSessionId, Guid senderId, string message)
-    {
-        var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId);
-        if (chatSession == null)
+
+        var data = await chatService.SendMessageAsync(chatId, userId, message);
+
+        var userOnlineConnectionId = await GetUserOnlineConnectionidAsync(data.SenderId);
+        if (userOnlineConnectionId != null)
         {
-            logger.LogWarning("User {UserId} attempted to send message to non-existent chat session {ChatSessionId}",
-                senderId, chatSessionId);
-            throw new HubException("Chat session does not exist");
+            await Clients.Client(userOnlineConnectionId).SendAsync("ReceiveMessage", data);
         }
-        
-        EnsureUserIsParticipantInChat(senderId, chatSession);
+        // await Clients.Group(chatSessionId.ToString()).SendAsync("ReceiveMessage", data);
     }
 
     /// <summary>
@@ -67,13 +60,15 @@ public class ChatHub(
         }
 
         EnsureUserIsParticipantInChat(userId, chatSession);
+        
+        await Clients.Group(chatSessionId.ToString()).SendAsync("UserJoinedChat");
 
         await Groups.AddToGroupAsync(Context.ConnectionId, chatSessionId.ToString());
         var key = GetInChatUserCacheKey(userId, chatSessionId);
         await cache.SetStringAsync(key, "true");
 
         var otherUserId = chatSession.BuyerId == userId ? chatSession.SellerId : chatSession.BuyerId;
-
+        
         return await IsUserOnlineAsync(otherUserId);
     }
 
@@ -96,8 +91,12 @@ public class ChatHub(
         }
 
         EnsureUserIsParticipantInChat(userId, chatSession);
+        
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatSessionId.ToString());
+        
+        await Clients.Group(chatSessionId.ToString()).SendAsync("UserLeftChat");
+        
         var key = GetInChatUserCacheKey(userId, chatSessionId);
         await cache.RemoveAsync(key);
     }
@@ -117,11 +116,7 @@ public class ChatHub(
 
         EnsureUserIsParticipantInChat(userId, chatSession);
 
-        await Clients.Group(chatSessionId.ToString()).SendAsync("UserTyping", new
-        {
-            ChatSessionId = chatSessionId,
-            SenderId = userId
-        });
+        await Clients.Group(chatSessionId.ToString()).SendAsync("UserTyping", userId);
     }
 
     [HubMethodName("StopTyping")]
@@ -192,17 +187,10 @@ public class ChatHub(
 
     private void EnsureUserIsParticipantInChat(Guid userId, ChatSession chatSession)
     {
-        if (chatSession.BuyerId != userId && chatSession.SellerId != userId) return;
+        if (chatSession.BuyerId == userId || chatSession.SellerId == userId) return;
 
         logger.LogWarning("User {UserId} is not a participant in chat session {ChatSessionId}", userId, chatSession.Id);
         throw new HubException("You are not a participant in this chat session");
-    }
-
-    private bool UserIsInChat(Guid userId, Guid chatSessionId)
-    {
-        var key = GetInChatUserCacheKey(userId, chatSessionId);
-        var inChat = cache.GetString(key);
-        return !string.IsNullOrEmpty(inChat);
     }
 
     private async Task<bool> IsUserOnlineAsync(Guid userId)
@@ -211,9 +199,11 @@ public class ChatHub(
         var connectionId = await cache.GetStringAsync(key);
         return !string.IsNullOrEmpty(connectionId);
     }
-
-    private static string GetOnlineUserCacheKey(Guid userId) => $"{OnlineUserCacheKey}:{userId}";
-
-    private static string GetInChatUserCacheKey(Guid userId, Guid chatSessionId) =>
-        $"{InChatUserCacheKey}:{userId}:{chatSessionId}";
+    
+    private async Task<string?> GetUserOnlineConnectionidAsync(Guid userId)
+    {
+        var key = GetOnlineUserCacheKey(userId);
+        var connectionId = await cache.GetStringAsync(key);
+        return connectionId;
+    }
 }

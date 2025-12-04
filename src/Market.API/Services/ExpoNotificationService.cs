@@ -23,11 +23,17 @@ public class ExpoNotificationService(ILogger<ExpoNotificationService> logger, IH
             Data = data
         };
 
-        var json = JsonSerializer.Serialize(payload);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
+        
+        var json = JsonSerializer.Serialize(payload, options);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _client.PostAsync("",content, cancellationToken);
-
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync(cancellationToken);

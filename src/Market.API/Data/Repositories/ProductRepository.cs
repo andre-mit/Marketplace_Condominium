@@ -1,10 +1,60 @@
 using Market.Domain;
+using Market.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Market.API.Data.Repositories;
 
 public class ProductRepository(ApplicationDbContext context) : IProductsRepository
 {
+    public async Task<PaginatedList<Product>> GetProductsAsync(int pageNumber, int pageSize, string? searchTerm = null, int? categoryId = null,
+        TransactionType? transactionType = null, ProductCondition? condition = null, bool? isAvailable = null, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var query = context.Products.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(p => p.Name.Contains(searchTerm) || p.Description.Contains(searchTerm));
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        if (transactionType.HasValue)
+        {
+            query = query.Where(p => p.AdvertisementTypes.Contains(transactionType.Value));
+        }
+
+        if (condition.HasValue)
+        {
+            query = query.Where(p => p.Condition == condition.Value);
+        }
+        
+        if (isAvailable.HasValue)
+        {
+            query = query.Where(p => p.IsAvailable == isAvailable.Value);
+        }
+        
+        if(userId.HasValue)
+        {
+            query = query.Where(p => p.OwnerId == userId.Value);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+
+        var products = await query
+            .Include(p => p.Owner)
+            .Include(p => p.Images)
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.UpdatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PaginatedList<Product>(products, total);
+    }
+
     public async Task<PaginatedList<Product>> GetAllProductsAsync(int page, int pageSize,
         CancellationToken cancellationToken = default)
     {
@@ -43,8 +93,10 @@ public class ProductRepository(ApplicationDbContext context) : IProductsReposito
 
     public async Task<Product?> GetProductByIdAsync(int productId, CancellationToken cancellationToken = default)
     {
-        return await context.Products.Include(p => p.Images)
+        return await context.Products
+            .Include(p => p.Images)
             .Include(p => p.Owner)
+            .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
     }
 

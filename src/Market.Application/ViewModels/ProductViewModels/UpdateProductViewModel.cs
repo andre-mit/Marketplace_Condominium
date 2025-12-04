@@ -20,4 +20,6 @@ public class UpdateProductViewModel<T>
     public T? Images { get; set; }
     
     public string[]? ImagesToRemoveUrls { get; set; }
+    
+    public int? CategoryId { get; set; }
 }

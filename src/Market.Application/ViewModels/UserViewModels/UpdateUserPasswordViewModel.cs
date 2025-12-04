@@ -4,6 +4,9 @@ namespace Market.SharedApplication.ViewModels.UserViewModels;
 
 public class UpdateUserPasswordViewModel
 {
+    [DataType(DataType.Password)]
+    public required string CurrentPassword { get; set; }
+    
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
     [DataType(DataType.Password)]
     public required string Password { get; set; }

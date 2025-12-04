@@ -4,6 +4,9 @@ namespace Market.API.Services.Interfaces;
 
 public interface IChatService
 {
+    Task<ChatSessionSyncViewModel> GetChatSessionAsync(Guid chatSessionId, Guid userId,
+        CancellationToken cancellationToken = default);
+    
     Task<Guid> CreateChatAsync(Guid userId, int productId,
         CancellationToken cancellationToken = default);
     Task<SyncChatsViewModel> SyncChatsAsync(Guid userId, DateTime? after,

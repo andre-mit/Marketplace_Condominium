@@ -1,4 +1,8 @@
+using Market.API.Hubs;
 using Market.SharedApplication.ViewModels.ChatViewModels;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Distributed;
+using static Market.API.Helpers.Constants;
 
 namespace Market.API.Services;
 
@@ -6,8 +10,55 @@ public class ChatService(
     ILogger<ChatService> logger,
     IChatSessionRepository chatSessionRepository,
     IChatMessageRepository chatMessageRepository,
-    IExpoNotificationService expoNotificationService) : IChatService
+    IExpoNotificationService expoNotificationService,
+    IHubContext<ChatHub> hubContext,
+    IDistributedCache cache) : IChatService
 {
+    public async Task<ChatSessionSyncViewModel> GetChatSessionAsync(Guid chatSessionId, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId, cancellationToken);
+        if (chatSession == null)
+        {
+            logger.LogWarning("User {UserId} attempted to access non-existent chat session {ChatSessionId}",
+                userId, chatSessionId);
+
+            throw new Exception("Chat session does not exist");
+        }
+
+        chatSession.UserIsParticipantInChat(userId);
+        
+        var participant = chatSession.BuyerId == userId ? chatSession.Seller : chatSession.Buyer!;
+        
+        var viewModel = new ChatSessionSyncViewModel
+        {
+            Id = chatSession.Id,
+            ParticipantId = participant.Id,
+            ParticipantName = participant.FullName,
+            ParticipantAvatarUrl = participant.AvatarUrl,
+            ProductId = chatSession.ProductId,
+            ProductName = chatSession.Product!.Name,
+            ProductImageUrl = chatSession.Product!.Images![0].Url,
+            CreatedAt = chatSession.CreatedAt,
+            UpdatedAt = chatSession.UpdatedAt,
+            LastMessageAt = chatSession.UpdatedAt,
+            LastMessageContent = chatSession.Messages?.OrderByDescending(m => m.SentAt).FirstOrDefault()?.Content,
+            UnreadCount = chatSession.Messages?.Count ?? 0,
+            Messages = chatSession.Messages?.Select(m => new ChatMessageSyncViewModel
+            {
+                Id = m.Id,
+                SenderId = m.SenderId,
+                Content = m.Content,
+                CreatedAt = m.SentAt,
+                ChatId = chatSession.Id,
+                ProductId = chatSession.ProductId,
+                SenderName = m.SenderId == chatSession.BuyerId ? chatSession.Buyer!.FullName : chatSession.Seller?.FullName
+            }).ToList() ?? []
+        };
+        
+        return viewModel;
+    }
+    
     public async Task<Guid> CreateChatAsync(Guid userId, int productId,
         CancellationToken cancellationToken = default)
     {
@@ -68,7 +119,7 @@ public class ChatService(
     {
         try
         {
-            var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId);
+            var chatSession = await chatSessionRepository.GetChatSessionByIdAsync(chatSessionId, cancellationToken);
             if (chatSession == null)
             {
                 logger.LogWarning(
@@ -92,8 +143,15 @@ public class ChatService(
                 Content = message,
                 SenderName = sender.FullName,
                 CreatedAt = DateTime.UtcNow,
-                ProductId = chatSession.ProductId
+                ProductId = chatSession.ProductId,
+                SenderAvatarUrl = sender.AvatarUrl
             };
+            
+            var userOnlineConnectionId = await GetUserOnlineConnectionIdAsync(receiver.Id);
+            if (userOnlineConnectionId != null)
+            {
+                await hubContext.Clients.Client(userOnlineConnectionId).SendAsync("ReceiveMessage", data, cancellationToken);
+            }
 
             if (!string.IsNullOrEmpty(receiver.NotificationToken))
             {
@@ -102,7 +160,7 @@ public class ChatService(
                     $"{sender.FirstName}",
                     message.Truncate(50),
                     data
-                );
+                , cancellationToken);
             }
 
             return data;
@@ -113,5 +171,12 @@ public class ChatService(
                 chatSessionId, senderId);
             throw;
         }
+    }
+    
+    private async Task<string?> GetUserOnlineConnectionIdAsync(Guid userId)
+    {
+        var key = Constants.GetOnlineUserCacheKey(userId);
+        var connectionId = await cache.GetStringAsync(key);
+        return connectionId;
     }
 }

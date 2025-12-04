@@ -6,6 +6,7 @@ public class ChatMessageSyncViewModel
     public Guid ChatId { get; set; }
     public Guid SenderId { get; set; }
     public string? SenderName { get; set; }
+    public string? SenderAvatarUrl { get; set; }
     public string Content { get; set; }
     
     public string Status { get; set; } = "sent"; // sent, delivered, read
@@ -13,4 +14,5 @@ public class ChatMessageSyncViewModel
     
     public DateTime CreatedAt { get; set; }
     public int? ProductId { get; set; }
+
 }
